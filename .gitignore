@@ -3,3 +3,4 @@ node_modules
 client/dist/*.js
 client/dist/*.map
 client/dist/
+dist/
