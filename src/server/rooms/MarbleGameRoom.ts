@@ -3,7 +3,7 @@ import { RoomState } from "./RoomState";
 import { InputData } from "./InputData";
 import { Player } from "./Player";
 
-export class Part4Room extends Room<RoomState> {
+export class MarbleGameRoom extends Room<RoomState> {
   fixedTimeStep = 1000 / 60;
 
   onCreate (options: any) {

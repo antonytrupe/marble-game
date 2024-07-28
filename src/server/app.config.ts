@@ -9,6 +9,7 @@ import { Part1Room } from "./rooms/Part1Room";
 import { Part2Room } from "./rooms/Part2Room";
 import { Part3Room } from "./rooms/Part3Room";
 import { Part4Room } from "./rooms/Part4Room";
+import { MarbleGameRoom } from "./rooms/MarbleGameRoom";
 
 let gameServerRef: Server;
 let latencySimulationMs: number = 0;
@@ -26,6 +27,7 @@ export default config({
         gameServer.define('part2_room', Part2Room);
         gameServer.define('part3_room', Part3Room);
         gameServer.define('part4_room', Part4Room);
+        gameServer.define('marble_game', MarbleGameRoom);
 
         //
         // keep gameServer reference, so we can

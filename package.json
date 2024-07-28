@@ -3,15 +3,14 @@
   "version": "1.0.0",
   "description": "Colyseus + Phaser: Client-side",
   "scripts": {
-    "start": "npm run server & npm run client",
-    "client": "parcel serve index.html",
+    "//start": "npm run server & npm run client",
+    "dev:client": "parcel serve index.html --dist-dir dist/client/",
     "start:client": "parcel serve index.html",
-    "build:client": "parcel build index.html",
-    "server": "tsx watch src/server/index.ts",
-    "start:server": "tsx watch src/index.ts",
-    "loadtest": "colyseus-loadtest loadtest/example.ts --room my_room --numClients 2",
-    "build:server": "npm run clean && tsc",
-    "clean": "node node_modules/rimraf/bin lib"
+    "build:client": "parcel build index.html --dist-dir dist/client/",
+    "dev:server": "tsx watch src/server/index.ts",
+    "start:server":"node dist/server/index.js",
+    "build:server": "tsc --project server.tsconfig.json",
+    "//clean": "node node_modules/rimraf/bin lib"
   },
   "keywords": [
     "colyseus",

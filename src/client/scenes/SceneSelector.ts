@@ -3,10 +3,11 @@ import Phaser from "phaser";
 export class SceneSelector extends Phaser.Scene {
 
     parts = {
-        '1': "Basic Player Movement",
-        '2': "Interpolation",
-        '3': "Client-predicted Input",
-        '4': "Fixed Tickrate",
+        '1': {description:"Basic Player Movement",name:'part1'},
+        '2': {description:"Interpolation",name:'part4'},
+        '3': {description:"Client-predicted Input",name:'part3'},
+        '4': {description:"Fixed Tickrate",name:'part4'},
+        '5':{description:'Marble Game',name:'marble_game'}
     };
 
     constructor() {
@@ -38,14 +39,15 @@ export class SceneSelector extends Phaser.Scene {
 
         for (let partNum in this.parts) {
             const index = parseInt(partNum) - 1;
-            const label = this.parts[partNum];
+            const label = this.parts[partNum].description;
+            const name = this.parts[partNum].name;
 
             // this.add.text(32, 32 + 32 * index, `Part ${partNum}: ${label}`, textStyle)
             this.add.text(130, 150 + 70 * index, `Part ${partNum}: ${label}`, textStyle)
                 .setInteractive()
                 .setPadding(6)
                 .on("pointerdown", () => {
-                    this.runScene(`part${partNum}`);
+                    this.runScene(name);
                 });
         }
     }
