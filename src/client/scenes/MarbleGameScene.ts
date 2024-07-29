@@ -12,6 +12,7 @@
 import Phaser from "phaser";
 import { Room, Client } from "colyseus.js";
 import { BACKEND_URL } from "../backend";
+import { InputData } from "@/InputData";
 
 const newLocal = "marble_game";
 export class MarbleGameScene extends Phaser.Scene {
@@ -27,7 +28,7 @@ export class MarbleGameScene extends Phaser.Scene {
 
     cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
 
-    inputPayload = {
+    inputPayload :InputData= {
         left: false,
         right: false,
         up: false,

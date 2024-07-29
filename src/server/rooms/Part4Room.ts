@@ -1,7 +1,7 @@
 import { Room, Client } from "colyseus";
-import { RoomState } from "./RoomState";
-import { InputData } from "./InputData";
-import { Player } from "./Player";
+import { RoomState } from "@/RoomState";
+import { InputData } from "@/InputData";
+import { Player } from "@/Player";
 
 export class Part4Room extends Room<RoomState> {
   fixedTimeStep = 1000 / 60;

@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    "baseUrl": ".", // root of your "paths" below. Required if "paths" is defined
+    "paths": {
+      "@/*": ["src/*"] // enables us to use @components/MyComponent
+    },
     "target": "es2016",
     "module": "commonjs",
     "esModuleInterop": true,
