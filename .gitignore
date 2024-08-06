@@ -4,3 +4,4 @@ client/dist/*.js
 client/dist/*.map
 client/dist/
 dist/
+.devmode.json

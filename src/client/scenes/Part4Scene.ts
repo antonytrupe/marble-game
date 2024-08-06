@@ -40,7 +40,18 @@ export class Part4Scene extends Phaser.Scene {
     currentTick: number = 0;
 
     constructor() {
-        super({ key: "part4" });
+        super({
+            key: "part4", physics: {
+                arcade: {
+                    debug: true,
+                },
+                matter: {
+                    debug: true,
+                    gravity: { x: 0, y: 0 }
+                }
+            }
+        })
+        // console.log('part4scene constructor')
     }
 
     async create() {
@@ -114,7 +125,7 @@ export class Part4Scene extends Phaser.Scene {
 
         } catch (e) {
             // couldn't connect
-            connectionStatusText.text =  "Could not connect with the server.";
+            connectionStatusText.text = "Could not connect with the server.";
         }
 
     }
@@ -170,10 +181,10 @@ export class Part4Scene extends Phaser.Scene {
             if (sessionId === this.room.sessionId) {
                 continue;
             }
-            
+
             const entity = this.playerEntities[sessionId];
             const { serverX, serverY } = entity.data.values;
-            
+
             entity.x = Phaser.Math.Linear(entity.x, serverX, 0.2);
             entity.y = Phaser.Math.Linear(entity.y, serverY, 0.2);
         }

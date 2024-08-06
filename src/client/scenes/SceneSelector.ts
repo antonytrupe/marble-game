@@ -3,11 +3,11 @@ import Phaser from "phaser";
 export class SceneSelector extends Phaser.Scene {
 
     parts = {
-        '1': {description:"Basic Player Movement",name:'part1'},
-        '2': {description:"Interpolation",name:'part4'},
+        // '1': {description:"Basic Player Movement",name:'part1'},
+        // '2': {description:"Interpolation",name:'part4'},
         '3': {description:"Client-predicted Input",name:'part3'},
-        '4': {description:"Fixed Tickrate",name:'part4'},
-        '5':{description:'Marble Game',name:'marble_game'}
+        '4': { description: "Fixed Tickrate", name: 'part4' },
+        '5': { description: 'Marble Game', name: 'marble_game' }
     };
 
     constructor() {
@@ -26,6 +26,7 @@ export class SceneSelector extends Phaser.Scene {
     create() {
         // automatically navigate to hash scene if provided
         if (window.location.hash) {
+            // console.log('hash')
             this.runScene(window.location.hash.substring(1));
             return;
         }
@@ -53,7 +54,9 @@ export class SceneSelector extends Phaser.Scene {
     }
 
     runScene(key: string) {
+        // console.log('run scene')
         this.game.scene.switch("selector", key)
+        window.location.hash=key
     }
 
 }

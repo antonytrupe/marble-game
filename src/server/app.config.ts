@@ -23,9 +23,9 @@ export default config({
         /**
          * Define your room handlers:
          */
-        gameServer.define('part1_room', Part1Room);
-        gameServer.define('part2_room', Part2Room);
-        gameServer.define('part3_room', Part3Room);
+        // gameServer.define('part1_room', Part1Room);
+        // gameServer.define('part2_room', Part2Room);
+        // gameServer.define('part3_room', Part3Room);
         gameServer.define('part4_room', Part4Room);
         gameServer.define('marble_game', MarbleGameRoom);
 

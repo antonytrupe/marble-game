@@ -12,88 +12,176 @@
 import Phaser from "phaser"
 import { Room, Client } from "colyseus.js"
 import { BACKEND_URL } from "../backend"
-import { InputData } from "@/InputData"
+import { RoomState } from "@/RoomState"
+import { getVelocity } from "@/Player"
 
-const newLocal = "marble_game"
+const room_name = "marble_game"
 export class MarbleGameScene extends Phaser.Scene {
-    room: Room
+    room: Room<RoomState>
 
-    currentPlayer: Phaser.Types.Physics.Arcade.ImageWithDynamicBody
-    playerEntities: { [sessionId: string]: Phaser.Types.Physics.Arcade.ImageWithDynamicBody } = {}
+    //Phaser.Physics.Matter.Image
+    currentPlayer: Phaser.Physics.Matter.Image
+    playerEntities: { [sessionId: string]: Phaser.Physics.Matter.Image } = {}
 
     debugFPS: Phaser.GameObjects.Text
 
-    localRef: Phaser.GameObjects.Arc
-    remoteRef: Phaser.GameObjects.Arc
+    // localRef: Phaser.GameObjects.Arc
+    // remoteRef: Phaser.GameObjects.Arc
 
-    cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys
-
-    inputPayload: InputData = {
-        left: false,
-        right: false,
-        up: false,
-        down: false,
-        tick: undefined,
-    }
+    //cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys
 
     elapsedTime = 0
     fixedTimeStep = 1000 / 60
 
-    currentTick: number = 0
+    //currentTick: number = 0
 
     constructor() {
-        super({ key: "marble_game" })
+        super({
+            key: room_name,
+            physics: {
+                default: "matter"
+            }
+        })
+    }
+
+    keys: object
+
+    update(time: number, delta: number): void {
+        //console.log('update')
+        //skip loop if not connected yet.
+        if (!this.currentPlayer) { return }
+
+        const [mb] = this.matter.getMatterBodies([this.currentPlayer])
+
+        if (Phaser.Input.Keyboard.JustDown(this.keys["W"])) {
+            this.matter.body.setVelocity(mb, getVelocity(mb.angle, 1))
+            this.room.send(0, 'keydown-W')
+        }
+
+        if (Phaser.Input.Keyboard.JustUp(this.keys["W"])) {
+            this.currentPlayer.setVelocity(0)
+            this.room.send(0, 'keyup-W')
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this.keys["D"])) {
+            this.matter.body.setAngularVelocity(mb, 0.1)
+            this.matter.body.setAngularSpeed(mb, 0.1)
+            this.room.send(0, 'keydown-D')
+        }
+
+        if (Phaser.Input.Keyboard.JustUp(this.keys["D"])) {
+            this.matter.body.setAngularVelocity(mb, 0)
+            this.room.send(0, 'keyup-D')
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this.keys["S"])) {
+            //  console.log('ssss')
+            this.matter.body.setVelocity(mb, getVelocity(mb.angle, -1))
+            this.room.send(0, 'keydown-S')
+        }
+
+        if (Phaser.Input.Keyboard.JustUp(this.keys["S"])) {
+            this.currentPlayer.setVelocity(0)
+            this.room.send(0, 'keyup-S')
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this.keys["A"])) {
+            this.matter.body.setAngularVelocity(mb, -0.1)
+            this.room.send(0, 'keydown-A')
+        }
+
+        if (Phaser.Input.Keyboard.JustUp(this.keys["A"])) {
+            this.matter.body.setAngularVelocity(mb, 0)
+            this.room.send(0, 'keyup-A')
+        }
+
+        // this.localRef.x = this.currentPlayer.x
+        // this.localRef.y = this.currentPlayer.y
+
+        for (let sessionId in this.playerEntities) {
+            //interpolate all player entities
+            //(except the current player)
+            if (sessionId === this.room.sessionId) {
+                // continue
+            }
+
+            const entity = this.playerEntities[sessionId]
+            const [mb] = this.matter.getMatterBodies([this.currentPlayer])
+
+            this.matter.body.setVelocity(mb, getVelocity(mb.angle, mb.speed))
+
+            //lerp
+            const { serverX, serverY } = entity.data.values
+
+            // entity.x = Phaser.Math.Linear(entity.x, serverX, 0.2)
+            // entity.y = Phaser.Math.Linear(entity.y, serverY, 0.2)
+            this.matter.body.setPosition(mb, {
+                x: Phaser.Math.Linear(entity.x, serverX, 0.2),
+                y: Phaser.Math.Linear(entity.y, serverY, 0.2)
+            }, false)
+        }
+
+        this.debugFPS.text = `Frame rate: ${this.game.loop.actualFps}`
     }
 
     async create() {
+        // console.log('create')
 
-        this.input.keyboard.on('keydown-A', () => {
-            console.log('a down')
-        })
+        this.keys = this.input.keyboard.addKeys('W,S,A,D')
 
-        this.input.keyboard.on('keyup-A', () => {
-            console.log('a up')
-        })
-
-        this.cursorKeys = this.input.keyboard.createCursorKeys()
         this.debugFPS = this.add.text(4, 4, "", { color: "#ff0000", })
 
-        // connect with the room
+        //connect with the room
         await this.connect()
 
-        this.room.state.players.onAdd((player, sessionId:string) => {
-            const entity = this.physics.add.image(player.x, player.y, 'ship_0001')
+        this.room.state.players.onAdd((player, sessionId: string) => {
+            console.log('add player', sessionId, player.toJSON())
+            const entity = this.matter.add.image(player.x, player.y, 'ship_0001', null, { shape: 'circle' }).setBody({ type: 'image', addToWorld: true })
+            entity.setFriction(1)
+            entity.setFrictionAir(0)
+            entity.setFrictionStatic(0)
+
+
+            const [mb] = this.matter.getMatterBodies([entity])
+            this.matter.body.setAngle(mb, player.angle, true)
+            this.matter.body.setAngularVelocity(mb, player.angularVelocity)
+            this.matter.body.setVelocity(mb, getVelocity(entity.rotation, player.speed))
+            this.matter.body.setInertia(mb, Infinity)
+
             this.playerEntities[sessionId] = entity
 
-            // is current player
+            //is current player
             if (sessionId === this.room.sessionId) {
                 this.currentPlayer = entity
-
-                this.localRef = this.add.circle(0, 0, entity.width/2)
-                this.localRef.setStrokeStyle(1, 0x00ff00)
-
-                this.remoteRef = this.add.circle(0, 0, entity.width/2)
-                this.remoteRef.setStrokeStyle(1, 0xff0000)
-
-                player.onChange(() => {
-                    //console.log('player.onchange',player)
-                    this.remoteRef.x = player.x
-                    this.remoteRef.y = player.y
-                })
-
-            } else {
-                // listening for server updates
-                player.onChange(() => {
-                    //
-                    // we're going to LERP the positions during the render loop.
-                    //
-                    entity.setData('serverX', player.x)
-                    entity.setData('serverY', player.y)
-                })
             }
+
+            player.onChange(() => {
+                // console.log('player.onchange', player.toJSON())
+                if (player.angle !== undefined) {
+                    console.log('angle', player.angle)
+                    this.matter.body.setAngle(mb, player.angle, true)
+                }
+                if (player.angularVelocity !== undefined) {
+                    console.log('angularVelocity', player.angularVelocity)
+                    this.matter.body.setAngularVelocity(mb, player.angularVelocity)
+                }
+                if (player.speed !== undefined) {
+                    // console.log('xxxxx')
+                    // console.log('speed', player.speed)
+                    this.matter.body.setVelocity(mb, getVelocity(mb.angle, player.speed))
+                }
+                if (player.x !== undefined && player.y != undefined) {
+                    // console.log('xxxxx')
+                    // console.log('speed', player.speed)
+                    this.matter.body.setPosition(mb, { x: player.x, y: player.y }, false)
+                }
+
+                entity.setData('serverX', player.x)
+                entity.setData('serverY', player.y)
+            })
         })
 
-        // remove local reference when entity is removed from the server
+        //remove local reference when entity is removed from the server
         this.room.state.players.onRemove((player, sessionId) => {
             const entity = this.playerEntities[sessionId]
             if (entity) {
@@ -102,13 +190,13 @@ export class MarbleGameScene extends Phaser.Scene {
             }
         })
 
-        // this.cameras.main.startFollow(this.ship, true, 0.2, 0.2)
-        // this.cameras.main.setZoom(1)
+        //this.cameras.main.startFollow(this.ship, true, 0.2, 0.2)
+        //this.cameras.main.setZoom(1)
         this.cameras.main.setBounds(0, 0, 800, 600)
     }
 
     async connect() {
-        // add connection status text
+        //add connection status text
         const connectionStatusText = this.add
             .text(0, 0, "Trying to connect with the server...")
             .setStyle({ color: "#ff0000" })
@@ -117,80 +205,14 @@ export class MarbleGameScene extends Phaser.Scene {
         const client = new Client(BACKEND_URL)
 
         try {
-            this.room = await client.joinOrCreate(newLocal, {})
+            this.room = await client.joinOrCreate(room_name, {})
 
-            // connection successful!
+            //connection successful!
             connectionStatusText.destroy()
 
         } catch (e) {
-            // couldn't connect
+            //couldn't connect
             connectionStatusText.text = "Could not connect with the server."
         }
-
-        //TODO add the current player object1
-
     }
-
-    update(time: number, delta: number): void {
-        // skip loop if not connected yet.
-        if (!this.currentPlayer) { return }
-
-
-        this.elapsedTime += delta
-        while (this.elapsedTime >= this.fixedTimeStep) {
-            this.elapsedTime -= this.fixedTimeStep
-            this.fixedTick(time, this.fixedTimeStep)
-        }
-
-        this.debugFPS.text = `Frame rate: ${this.game.loop.actualFps}`
-    }
-
-    fixedTick(time, delta) {
-        this.currentTick++
-
-        // const currentPlayerRemote = this.room.state.players.get(this.room.sessionId)
-        // const ticksBehind = this.currentTick - currentPlayerRemote.tick
-        // console.log({ ticksBehind })
-
-        const velocity = 2
-        this.inputPayload.left = this.cursorKeys.left.isDown
-        this.inputPayload.right = this.cursorKeys.right.isDown
-        this.inputPayload.up = this.cursorKeys.up.isDown
-        this.inputPayload.down = this.cursorKeys.down.isDown
-        this.inputPayload.tick = this.currentTick
-        this.room.send(0, this.inputPayload)
-
-        if (this.inputPayload.left) {
-            this.currentPlayer.x -= velocity
-
-        } else if (this.inputPayload.right) {
-            this.currentPlayer.x += velocity
-        }
-
-        if (this.inputPayload.up) {
-            this.currentPlayer.y -= velocity
-
-        } else if (this.inputPayload.down) {
-            this.currentPlayer.y += velocity
-        }
-
-        this.localRef.x = this.currentPlayer.x
-        this.localRef.y = this.currentPlayer.y
-
-        for (let sessionId in this.playerEntities) {
-            // interpolate all player entities
-            // (except the current player)
-            if (sessionId === this.room.sessionId) {
-                continue
-            }
-
-            const entity = this.playerEntities[sessionId]
-            const { serverX, serverY } = entity.data.values
-
-            entity.x = Phaser.Math.Linear(entity.x, serverX, 0.2)
-            entity.y = Phaser.Math.Linear(entity.y, serverY, 0.2)
-        }
-
-    }
-
 }

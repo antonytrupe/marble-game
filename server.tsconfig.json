@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "es2016",
     "module": "commonjs",
+    "useDefineForClassFields": false,
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
