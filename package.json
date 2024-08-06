@@ -10,7 +10,8 @@
     "dev:server": "tsx watch src/server/index.ts",
     "start:server": "node dist/server/index.js",
     "build:server": "tsc --project server.tsconfig.json",
-    "//clean": "node node_modules/rimraf/bin lib"
+    "//clean": "node node_modules/rimraf/bin lib",
+    "test": "jest"
   },
   "keywords": [
     "colyseus",
@@ -24,10 +25,12 @@
     "@colyseus/testing": "^0.15.3",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
     "@types/matter-js": "^0.19.7",
-    "@types/mocha": "^10.0.7",
     "copyfiles": "^2.4.1",
+    "jest": "^29.7.0",
     "process": "^0.11.10",
+    "ts-jest": "^29.2.4",
     "tsx": "^4.16.2",
     "typescript": "^5.5.4"
   },

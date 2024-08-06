@@ -1,7 +1,8 @@
 import { Room, Client } from "colyseus"
 import { RoomState } from "@/RoomState"
 import { InputData } from "@/InputData"
-import { getAngle, getVelocity, normalize, Player } from "@/Player"
+import { Player } from "@/Player"
+import { getAngle, getVelocity, normalize } from "@/functions"
 import { Bodies, Body, Composite, Engine } from "matter-js"
 
 
@@ -46,11 +47,10 @@ export class MarbleGameRoom extends Room<RoomState> {
 
       player.speed = entity.speed
       if (entity.speed != 0) {
-        const a = getAngle(entity.velocity)
-        const b = entity.angle
-        // console.log('a', a)
+        const velocity_angle = getAngle(entity.velocity)
+         // console.log('a', a)
         // console.log('b', b)
-        if (Math.abs(a - b) >= 3) {
+        if (Math.abs(velocity_angle - entity.angle) >= 3) {
           // console.log('going backwards')
           player.speed *= -1
         }

@@ -13,7 +13,8 @@ import Phaser from "phaser"
 import { Room, Client } from "colyseus.js"
 import { BACKEND_URL } from "../backend"
 import { RoomState } from "@/RoomState"
-import { getVelocity } from "@/Player"
+import { Player } from "@/Player"
+import { getVelocity } from "@/functions"
 
 const room_name = "marble_game"
 export class MarbleGameScene extends Phaser.Scene {
@@ -52,45 +53,54 @@ export class MarbleGameScene extends Phaser.Scene {
         if (!this.currentPlayer) { return }
 
         const [mb] = this.matter.getMatterBodies([this.currentPlayer])
+        const p: Player = this.room.state.players.get(this.room.sessionId)
+        // console.log(mb.position)
+        // console.log(mb.angle)
 
         if (Phaser.Input.Keyboard.JustDown(this.keys["W"])) {
+            p.speed = 1
             this.matter.body.setVelocity(mb, getVelocity(mb.angle, 1))
             this.room.send(0, 'keydown-W')
         }
 
         if (Phaser.Input.Keyboard.JustUp(this.keys["W"])) {
+            p.speed = 0
             this.currentPlayer.setVelocity(0)
             this.room.send(0, 'keyup-W')
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.keys["D"])) {
+            p.angularVelocity = .1
             this.matter.body.setAngularVelocity(mb, 0.1)
-            this.matter.body.setAngularSpeed(mb, 0.1)
             this.room.send(0, 'keydown-D')
         }
 
         if (Phaser.Input.Keyboard.JustUp(this.keys["D"])) {
+            p.angularVelocity = 0
             this.matter.body.setAngularVelocity(mb, 0)
             this.room.send(0, 'keyup-D')
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.keys["S"])) {
-            //  console.log('ssss')
+            p.speed = -1
             this.matter.body.setVelocity(mb, getVelocity(mb.angle, -1))
             this.room.send(0, 'keydown-S')
         }
 
         if (Phaser.Input.Keyboard.JustUp(this.keys["S"])) {
+            p.speed = 0
             this.currentPlayer.setVelocity(0)
             this.room.send(0, 'keyup-S')
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.keys["A"])) {
+            p.angularVelocity = -.1
             this.matter.body.setAngularVelocity(mb, -0.1)
             this.room.send(0, 'keydown-A')
         }
 
         if (Phaser.Input.Keyboard.JustUp(this.keys["A"])) {
+            p.angularVelocity = 0
             this.matter.body.setAngularVelocity(mb, 0)
             this.room.send(0, 'keyup-A')
         }
@@ -115,10 +125,10 @@ export class MarbleGameScene extends Phaser.Scene {
 
             // entity.x = Phaser.Math.Linear(entity.x, serverX, 0.2)
             // entity.y = Phaser.Math.Linear(entity.y, serverY, 0.2)
-            this.matter.body.setPosition(mb, {
-                x: Phaser.Math.Linear(entity.x, serverX, 0.2),
-                y: Phaser.Math.Linear(entity.y, serverY, 0.2)
-            }, false)
+            // this.matter.body.setPosition(mb, {
+            //     x: Phaser.Math.Linear(entity.x, serverX, 0.2),
+            //     y: Phaser.Math.Linear(entity.y, serverY, 0.2)
+            // }, false)
         }
 
         this.debugFPS.text = `Frame rate: ${this.game.loop.actualFps}`
@@ -135,6 +145,7 @@ export class MarbleGameScene extends Phaser.Scene {
         await this.connect()
 
         this.room.state.players.onAdd((player, sessionId: string) => {
+            console.log(this.room.state.players.toJSON())
             console.log('add player', sessionId, player.toJSON())
             const entity = this.matter.add.image(player.x, player.y, 'ship_0001', null, { shape: 'circle' }).setBody({ type: 'image', addToWorld: true })
             entity.setFriction(1)
@@ -158,11 +169,11 @@ export class MarbleGameScene extends Phaser.Scene {
             player.onChange(() => {
                 // console.log('player.onchange', player.toJSON())
                 if (player.angle !== undefined) {
-                    console.log('angle', player.angle)
+                    // console.log('angle', player.angle)
                     this.matter.body.setAngle(mb, player.angle, true)
                 }
                 if (player.angularVelocity !== undefined) {
-                    console.log('angularVelocity', player.angularVelocity)
+                    // console.log('angularVelocity', player.angularVelocity)
                     this.matter.body.setAngularVelocity(mb, player.angularVelocity)
                 }
                 if (player.speed !== undefined) {
