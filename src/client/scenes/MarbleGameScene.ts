@@ -58,49 +58,35 @@ export class MarbleGameScene extends Phaser.Scene {
         // console.log(mb.angle)
 
         if (Phaser.Input.Keyboard.JustDown(this.keys["W"])) {
-            p.speed = 1
-            this.matter.body.setVelocity(mb, getVelocity(mb.angle, 1))
+            const v = getVelocity(mb.angle, 1)
+            this.matter.body.setVelocity(mb, v)
             this.room.send(0, 'keydown-W')
         }
-
         if (Phaser.Input.Keyboard.JustUp(this.keys["W"])) {
-            p.speed = 0
-            this.currentPlayer.setVelocity(0)
+            this.matter.body.setVelocity(mb, getVelocity(mb.angle, 0))
             this.room.send(0, 'keyup-W')
         }
-
-        if (Phaser.Input.Keyboard.JustDown(this.keys["D"])) {
-            p.angularVelocity = .1
-            this.matter.body.setAngularVelocity(mb, 0.1)
-            this.room.send(0, 'keydown-D')
-        }
-
-        if (Phaser.Input.Keyboard.JustUp(this.keys["D"])) {
-            p.angularVelocity = 0
-            this.matter.body.setAngularVelocity(mb, 0)
-            this.room.send(0, 'keyup-D')
-        }
-
         if (Phaser.Input.Keyboard.JustDown(this.keys["S"])) {
-            p.speed = -1
             this.matter.body.setVelocity(mb, getVelocity(mb.angle, -1))
             this.room.send(0, 'keydown-S')
         }
-
         if (Phaser.Input.Keyboard.JustUp(this.keys["S"])) {
-            p.speed = 0
-            this.currentPlayer.setVelocity(0)
+            this.matter.body.setVelocity(mb, { x: 0, y: 0 })
             this.room.send(0, 'keyup-S')
         }
-
+        if (Phaser.Input.Keyboard.JustDown(this.keys["D"])) {
+            this.matter.body.setAngularVelocity(mb, 0.1)
+            this.room.send(0, 'keydown-D')
+        }
+        if (Phaser.Input.Keyboard.JustUp(this.keys["D"])) {
+            this.matter.body.setAngularVelocity(mb, 0)
+            this.room.send(0, 'keyup-D')
+        }
         if (Phaser.Input.Keyboard.JustDown(this.keys["A"])) {
-            p.angularVelocity = -.1
             this.matter.body.setAngularVelocity(mb, -0.1)
             this.room.send(0, 'keydown-A')
         }
-
         if (Phaser.Input.Keyboard.JustUp(this.keys["A"])) {
-            p.angularVelocity = 0
             this.matter.body.setAngularVelocity(mb, 0)
             this.room.send(0, 'keyup-A')
         }
@@ -118,6 +104,7 @@ export class MarbleGameScene extends Phaser.Scene {
             const entity = this.playerEntities[sessionId]
             const [mb] = this.matter.getMatterBodies([this.currentPlayer])
 
+            //TODO what about going backwards?
             this.matter.body.setVelocity(mb, getVelocity(mb.angle, mb.speed))
 
             //lerp
@@ -145,9 +132,9 @@ export class MarbleGameScene extends Phaser.Scene {
         await this.connect()
 
         this.room.state.players.onAdd((player, sessionId: string) => {
-            console.log(this.room.state.players.toJSON())
-            console.log('add player', sessionId, player.toJSON())
-            const entity = this.matter.add.image(player.x, player.y, 'ship_0001', null, { shape: 'circle' }).setBody({ type: 'image', addToWorld: true })
+            // console.log(this.room.state.players.toJSON())
+            // console.log('add player', sessionId, player.toJSON())
+            const entity = this.matter.add.image(player.position.x, player.position.y, 'ship_0001', null, { shape: 'circle' }).setBody({ type: 'image', addToWorld: true })
             entity.setFriction(1)
             entity.setFrictionAir(0)
             entity.setFrictionStatic(0)
@@ -156,7 +143,7 @@ export class MarbleGameScene extends Phaser.Scene {
             const [mb] = this.matter.getMatterBodies([entity])
             this.matter.body.setAngle(mb, player.angle, true)
             this.matter.body.setAngularVelocity(mb, player.angularVelocity)
-            this.matter.body.setVelocity(mb, getVelocity(entity.rotation, player.speed))
+            // this.matter.body.setVelocity(mb, getVelocity(entity.rotation, player.speed))
             this.matter.body.setInertia(mb, Infinity)
 
             this.playerEntities[sessionId] = entity
@@ -176,19 +163,19 @@ export class MarbleGameScene extends Phaser.Scene {
                     // console.log('angularVelocity', player.angularVelocity)
                     this.matter.body.setAngularVelocity(mb, player.angularVelocity)
                 }
-                if (player.speed !== undefined) {
+                if (player.velocity !== undefined) {
                     // console.log('xxxxx')
                     // console.log('speed', player.speed)
-                    this.matter.body.setVelocity(mb, getVelocity(mb.angle, player.speed))
+                    this.matter.body.setVelocity(mb, player.velocity)
                 }
-                if (player.x !== undefined && player.y != undefined) {
+                if (player.position.x !== undefined && player.position.y != undefined) {
                     // console.log('xxxxx')
                     // console.log('speed', player.speed)
-                    this.matter.body.setPosition(mb, { x: player.x, y: player.y }, false)
+                    this.matter.body.setPosition(mb, { x: player.position.x, y: player.position.y }, false)
                 }
 
-                entity.setData('serverX', player.x)
-                entity.setData('serverY', player.y)
+                entity.setData('serverX', player.position.x)
+                entity.setData('serverY', player.position.y)
             })
         })
 

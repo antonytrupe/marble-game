@@ -2,7 +2,7 @@ import { Room, Client } from "colyseus"
 import { RoomState } from "@/RoomState"
 import { InputData } from "@/InputData"
 import { Player } from "@/Player"
-import { getAngle, getVelocity, normalize } from "@/functions"
+import { getAngle, getMagnitude, getVelocity, normalize } from "@/functions"
 import { Bodies, Body, Composite, Engine } from "matter-js"
 
 
@@ -35,30 +35,33 @@ export class MarbleGameRoom extends Room<RoomState> {
 
   update(deltaTime: number) {
 
-    Engine.update(this.engine, deltaTime / 2)
+    Engine.update(this.engine, deltaTime / 1)
     this.state.players.forEach(player => {
       const entity = Composite.get(this.engine.world, player.id, 'body') as Body
       //normalize some stuff
-      Body.setAngle(entity, normalize(entity.angle))
+      // Body.setAngle(entity, normalize(entity.angle))
       player.angle = entity.angle
 
-      
+
       player.angularVelocity = entity.angularVelocity
 
-      player.speed = entity.speed
-      if (entity.speed != 0) {
-        const velocity_angle = getAngle(entity.velocity)
-         // console.log('a', a)
-        // console.log('b', b)
-        if (Math.abs(velocity_angle - entity.angle) >= 3) {
-          // console.log('going backwards')
-          player.speed *= -1
-        }
-      }
-      Body.setVelocity(entity, getVelocity(entity.angle, player.speed))
+      player.velocity.x = entity.velocity.x
+      player.velocity.y = entity.velocity.y
+      const m = getMagnitude(player.velocity)
+      // if (entity.speed != 0) {
+      //   const velocity_angle = getAngle(entity.velocity)
+      //    // console.log('a', a)
+      //   // console.log('b', b)
+      //   if (Math.abs(velocity_angle - entity.angle) >= 3) {
+      //     // console.log('going backwards')
+      //     player.speed *= -1
+      //   }
+      // }
+      //TODO what about going backwards?
+      Body.setVelocity(entity, getVelocity(entity.angle, m))
 
-      player.x = entity.position.x
-      player.y = entity.position.y
+      player.position.x = entity.position.x
+      player.position.y = entity.position.y
 
 
       //dequeue player inputs
@@ -67,65 +70,77 @@ export class MarbleGameRoom extends Room<RoomState> {
         console.log(player.id, input)
 
         switch (input) {
+          case "keydown-W":
+            {
+              const v = getVelocity(entity.angle, 1)
+              player.velocity.x = v.x
+              player.velocity.y = v.y
+              //player.velocity.setDirty()
+              Body.setVelocity(entity, v)
+              break
+            }
+          case "keyup-W":
+            player.velocity.x = 0
+            player.velocity.y = 0
+            Body.setVelocity(entity, { x: 0, y: 0 })
+            break
+          case "keydown-S":
+            {
+              const v = getVelocity(entity.angle, -1)
+              player.velocity.x = v.x
+              player.velocity.y = v.y
+              Body.setVelocity(entity, getVelocity(entity.angle, -1))
+              break
+            }
+          case "keyup-S":
+            player.velocity.x = 0
+            player.velocity.y = 0
+            Body.setVelocity(entity, { x: 0, y: 0 })
+            break
           case "keydown-D": 13
             player.angularVelocity = 0.1
             Body.setAngularVelocity(entity, player.angularVelocity)
-            break;
+            break
           case "keyup-D":
             player.angularVelocity = 0
             Body.setAngularVelocity(entity, player.angularVelocity)
-            break;
+            break
           case "keydown-A":
             player.angularVelocity = -0.1
             Body.setAngularVelocity(entity, player.angularVelocity)
-            break;
+            break
           case "keyup-A":
             player.angularVelocity = 0
             Body.setAngularVelocity(entity, player.angularVelocity)
-            break;
-          case "keydown-W":
-            player.speed = 1
-            Body.setVelocity(entity, getVelocity(entity.angle, player.speed))
-            break;
-          case "keyup-W":
-            player.speed = 0
-            Body.setVelocity(entity, { x: 0, y: 0 })
-            break;
-          case "keydown-S":
-            player.speed = -1
-            Body.setVelocity(entity, getVelocity(entity.angle, player.speed))
-            break;
-          case "keyup-S":
-            player.speed = 0
-            Body.setVelocity(entity, { x: 0, y: 0 })
-            break;
+            break
         }
       }
     })
     // if (deltaTime >= 16.667)
     //   console.log(deltaTime)
 
-    Engine.update(this.engine, deltaTime / 2)
+    // Engine.update(this.engine, deltaTime / 2)
   }
 
   onJoin(client: Client, options: any) {
     console.log(client.sessionId, "joined marblegame!")
 
     const player = new Player()
-    player.x = Math.random() * this.state.mapWidth / 2 + this.state.mapWidth / 4
-    player.y = Math.random() * this.state.mapHeight / 2 + this.state.mapWidth / 4
-    player.speed = 0
+    player.position.x = Math.random() * this.state.mapWidth / 2 + this.state.mapWidth / 4
+    player.position.y = Math.random() * this.state.mapHeight / 2 + this.state.mapWidth / 4
+    player.velocity.x = 0
+    player.velocity.y = 0
     player.angle = 0
     player.angularVelocity = 0
 
-    const circle = Bodies.circle(player.x, player.y, 10, { friction: 1, frictionAir: 0, frictionStatic: 0, inertia: Infinity })
+    const circle = Bodies.circle(player.position.x, player.position.y, 10, { friction: 1, frictionAir: 0, frictionStatic: 0, inertia: Infinity })
 
     player.id = circle.id
 
     Composite.add(this.engine.world, [circle])
 
     this.state.players.set(client.sessionId, player)
-    // console.log(player.toJSON())
+    console.log(player.toJSON())
   }
 
   onLeave(client: Client, consented: boolean) {

@@ -26,12 +26,15 @@ describe("functions", () => {
         test("-2", () => {
             expect(normalize(-2 * Math.PI)).toBe(0)
         })
+
         test("-4", () => {
             expect(normalize(-4 * Math.PI)).toBe(0)
         })
+
         test("3", () => {
             expect(normalize(3 * Math.PI)).toBe(Math.PI)
         })
+
         test("-3", () => {
             expect(normalize(-3 * Math.PI)).toBe(Math.PI)
         })
@@ -70,6 +73,7 @@ describe("functions", () => {
     })
 
     describe("getVelocity", () => {
+
         test("up", () => {
             expect(getVelocity(0, 1)).toStrictEqual({ x: 0, y: -1 })
         })
@@ -109,6 +113,14 @@ describe("functions", () => {
             expect(getVelocity(Math.PI * 7 / 4, 1).y).toBeCloseTo(-.707)
         })
 
-    })
+        test("up backwards", () => {
+            expect(getVelocity(0, -1).x).toBeCloseTo(0)
+            expect(getVelocity(0, -1).y).toBeCloseTo(1)
+        })
 
+        test("right up backwards", () => {
+            expect(getVelocity(Math.PI / 4, -1).x).toBeCloseTo(-0.7071067811865475)
+            expect(getVelocity(Math.PI / 4, -1).y).toBeCloseTo( 0.7071067811865475)
+        })
+    })
 })
