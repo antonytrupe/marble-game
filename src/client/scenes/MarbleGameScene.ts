@@ -59,6 +59,7 @@ export class MarbleGameScene extends Phaser.Scene {
         // console.log(mb.position)
         // console.log(mb.angle)
 
+
         if (Phaser.Input.Keyboard.JustDown(this.keys["W"])) {
             this.world.moveForward(mb, p)
             this.room.send(0, 'keydown-W')
@@ -119,12 +120,34 @@ export class MarbleGameScene extends Phaser.Scene {
             // }, false)
         }
 
+        const b = this.cameras.main.getBounds()
+        // console.log(this.currentPlayer.body.position,b)
+        this.debugFPS.setPosition(this.currentPlayer.x * this.cameras.main.zoom - (b.width / 2), this.currentPlayer.y - b.height / 2)
+        this.debugFPS.scale = 1 / this.cameras.main.zoom
         this.debugFPS.text = `Frame rate: ${this.game.loop.actualFps}`
     }
 
-
     async create() {
         // console.log('create')
+
+        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
+            if (deltaY > 0) {
+                // console.log('zoom out')
+                var newZoom = this.cameras.main.zoom - .1;
+                if (newZoom > 0.9) {
+                    this.cameras.main.zoom = newZoom;
+                }
+            }
+
+            if (deltaY < 0) {
+                var newZoom = this.cameras.main.zoom + .1;
+                if (newZoom < 2) {
+                    this.cameras.main.zoom = newZoom;
+                }
+            }
+
+            // console.log(this.cameras.main.zoom)
+        })
 
         this.keys = this.input.keyboard.addKeys('W,S,A,D')
 
@@ -141,6 +164,7 @@ export class MarbleGameScene extends Phaser.Scene {
             entity.setFrictionAir(0)
             entity.setFrictionStatic(0)
             // console.log((entity.body as unknown as Body).id)
+            //entity.setOrigin()
 
             const [mb] = this.matter.getMatterBodies([entity])
             // console.log(mb.id)
@@ -156,7 +180,11 @@ export class MarbleGameScene extends Phaser.Scene {
             //is current player
             if (sessionId === this.room.sessionId) {
                 this.currentPlayer = entity
+                this.cameras.main.startFollow(entity, true, .7, .7)
             }
+
+            this.cameras.main.setZoom(1)
+            this.cameras.main.useBounds = false
 
             player.velocity.onChange(() => {
                 if (player.velocity !== undefined) {

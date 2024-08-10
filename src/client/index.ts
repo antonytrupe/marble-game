@@ -1,10 +1,6 @@
 import Phaser from "phaser"
 
 import { SceneSelector } from "./scenes/SceneSelector"
-import { Part1Scene } from "./scenes/Part1Scene"
-import { Part2Scene } from "./scenes/Part2Scene"
-import { Part3Scene } from "./scenes/Part3Scene"
-import { Part4Scene } from "./scenes/Part4Scene"
 import { MarbleGameScene } from "./scenes/MarbleGameScene"
 
 const matterContainer = document.querySelector('#matter-container') as HTMLElement
@@ -57,7 +53,7 @@ export const config: Phaser.Types.Core.GameConfig = {
     scene: [SceneSelector,
         // Part2Scene,
         // Part3Scene,
-        Part4Scene,
+        // Part4Scene,
         MarbleGameScene,
     ],
 }
