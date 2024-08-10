@@ -10,7 +10,7 @@
  */
 
 import Phaser from "phaser"
-import { Room, Client } from "colyseus.js"
+import { Room, Client, RoomAvailable } from "colyseus.js"
 import { BACKEND_URL } from "../backend"
 import { RoomState } from "@/RoomState"
 import { Player } from "@/Player"
@@ -18,7 +18,7 @@ import { getVelocity } from "@/functions"
 import World from "@/World"
 import { Body } from "matter-js"
 
-const room_name = "marble_game"
+// const room_name = "marble_game"
 export class MarbleGameScene extends Phaser.Scene {
     room: Room<RoomState>
 
@@ -37,19 +37,28 @@ export class MarbleGameScene extends Phaser.Scene {
 
     keys: object
     world: World = new World()
+    roomName: string
+ 
 
     constructor() {
         super({
-            key: room_name,
+            key: 'marbleGame',
             physics: {
                 default: "matter"
             }
         })
     }
 
+    init(data: { roomName: string }): void {
+        // console.log('init', data)
+        this.roomName=data.roomName
+    }
+
     update(time: number, delta: number): void {
         //console.log('update')
         //skip loop if not connected yet.
+
+        // this.room.connection.isOpen
         if (!this.currentPlayer) { return }
 
         // this.matter.composite.get(this.matter.world,this.currentPlayer,'body')
@@ -120,51 +129,72 @@ export class MarbleGameScene extends Phaser.Scene {
             // }, false)
         }
 
-        const b = this.cameras.main.getBounds()
-        // console.log(this.currentPlayer.body.position,b)
-        this.debugFPS.setPosition(this.currentPlayer.x * this.cameras.main.zoom - (b.width / 2), this.currentPlayer.y - b.height / 2)
         this.debugFPS.scale = 1 / this.cameras.main.zoom
         this.debugFPS.text = `Frame rate: ${this.game.loop.actualFps}`
     }
 
+    preload() {
+        // console.log('preload')
+        this.load.image('background')
+        this.load.image('ship_0001')
+        this.load.image('scale')
+    }
+
+    scaleSprite
+
     async create() {
         // console.log('create')
+        this.add.tileSprite(0, 0, 512, 512, 'background')//.setOrigin(0)
+        this.add.tileSprite(512, 0, 512, 512, 'background')//.setOrigin(0)
+        this.scaleSprite = this.add.tileSprite(0, 0, 108, 10, 'scale').setOrigin(0).setScrollFactor(0)
+
+        this.cameras.main.zoom = 2.3
+
+        this.cameras.main.setRotation(0)
 
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
             if (deltaY > 0) {
                 // console.log('zoom out')
-                var newZoom = this.cameras.main.zoom - .1;
-                if (newZoom > 0.9) {
-                    this.cameras.main.zoom = newZoom;
+                var newZoom = this.cameras.main.zoom - .1
+                if (newZoom >= 0.6) {
+                    this.cameras.main.zoom = newZoom
                 }
             }
 
             if (deltaY < 0) {
-                var newZoom = this.cameras.main.zoom + .1;
-                if (newZoom < 2) {
-                    this.cameras.main.zoom = newZoom;
+                var newZoom = this.cameras.main.zoom + .1
+                if (newZoom <= 4) {
+                    this.cameras.main.zoom = newZoom
                 }
             }
-
-            // console.log(this.cameras.main.zoom)
+            console.log(this.cameras.main.zoom)
+            // this.scaleSprite.setScrollFactor( this.cameras.main.zoom)
+            // this.get.tileSprite(0, 0, 108, 10, 'scale').setOrigin(0).setScrollFactor(0)
         })
 
         this.keys = this.input.keyboard.addKeys('W,S,A,D')
 
         this.debugFPS = this.add.text(4, 4, "", { color: "#ff0000", })
+        this.debugFPS.setScrollFactor(0)
+
 
         //connect with the room
         await this.connect()
 
         this.room.state.players.onAdd((player, sessionId: string) => {
             //  console.log(this.room.state.players.toJSON())
-            console.log(sessionId, 'joined marblegame')
+            // console.log(sessionId, 'joined marblegame')
             const entity = this.matter.add.image(player.position.x, player.position.y, 'ship_0001', null, { shape: 'circle' }).setBody({ type: 'image', addToWorld: true })
             entity.setFriction(1)
             entity.setFrictionAir(0)
             entity.setFrictionStatic(0)
+            entity.setInteractive()
             // console.log((entity.body as unknown as Body).id)
             //entity.setOrigin()
+
+            entity.on('pointerdown', () => {
+                console.log('click', player.id)
+            })
 
             const [mb] = this.matter.getMatterBodies([entity])
             // console.log(mb.id)
@@ -233,8 +263,6 @@ export class MarbleGameScene extends Phaser.Scene {
             }
         })
 
-        //this.cameras.main.startFollow(this.ship, true, 0.2, 0.2)
-        //this.cameras.main.setZoom(1)
         this.cameras.main.setBounds(0, 0, 800, 600)
     }
 
@@ -247,14 +275,39 @@ export class MarbleGameScene extends Phaser.Scene {
 
         const client = new Client(BACKEND_URL)
 
+        // const lobby = await client.joinOrCreate("lobby");
+
+        // let allRooms: RoomAvailable[] = [];
+
+        // lobby.onMessage("rooms", (rooms) => {
+        //     allRooms = rooms;
+        // });
+
+        // lobby.onMessage("+", ([roomId, room]) => {
+        //     const roomIndex = allRooms.findIndex((room) => room.roomId === roomId);
+        //     if (roomIndex !== -1) {
+        //         allRooms[roomIndex] = room;
+
+        //     } else {
+        //         allRooms.push(room);
+        //     }
+        // });
+
+        // lobby.onMessage("-", (roomId) => {
+        //     allRooms = allRooms.filter((room) => room.roomId !== roomId);
+        // });
+
+
         try {
-            this.room = await client.joinOrCreate(room_name, {})
+            // console.log(this.roomName)
+            this.room = await client.joinOrCreate(this.roomName, {})
 
             //connection successful!
             connectionStatusText.destroy()
 
         } catch (e) {
             //couldn't connect
+            console.log(e)
             connectionStatusText.text = "Could not connect with the server."
         }
     }

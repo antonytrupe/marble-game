@@ -1,8 +1,8 @@
-import { Room, Client } from "colyseus"
+import { Room, Client, updateLobby } from "colyseus"
 import { RoomState } from "@/RoomState"
 import { InputData } from "@/InputData"
 import { Player } from "@/Player"
-import { getAngle, getMagnitude, getVelocity, normalize } from "@/functions"
+import { getMagnitude, getVelocity } from "@/functions"
 import { Bodies, Body, Composite, Engine } from "matter-js"
 import World from "@/World"
 
@@ -13,7 +13,16 @@ export class MarbleGameRoom extends Room<RoomState> {
 
   onCreate(options: any) {
     console.log('MarbleGameRoom onCreate')
+    // console.log(options)
     this.setState(new RoomState())
+    console.log(this.roomName)
+ 
+    this.setMetadata({
+      customData: "Hello world!"+this.roomName
+    })
+      .then(() => updateLobby(this))
+
+
 
     this.engine = Engine.create({ gravity: { x: 0, y: 0 } })
 

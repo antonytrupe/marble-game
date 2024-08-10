@@ -14,34 +14,34 @@ export const config: Phaser.Types.Core.GameConfig = {
     },
     width: matterContainer.clientWidth,
     height: matterContainer.clientHeight,
-    scale:{mode:Phaser.Scale.RESIZE},
+    scale: { mode: Phaser.Scale.RESIZE },
     // height: 200,
     backgroundColor: '#f8f8f0',
     parent: matterContainer,
-     
+
     physics: {
         default: "matter",
         matter: {
             enabled: true,
             autoUpdate: true,
             enableSleeping: false,
-            frictionNormalMultiplier: 0,
+            frictionNormalMultiplier: 1,
 
             gravity: {
                 y: 0,
                 x: 0
             },
 
-            debug: {
-                showVelocity:true,
-                showAxes:true,
-                showAngleIndicator:true,
-                showCollisions:true,
-                showPositions:true,
-                showSensors:true,
-                showBody: true,
-                showStaticBody: true
-            }
+            // debug: {
+            // showVelocity:true,
+            // showAxes:true,
+            // showAngleIndicator:true,
+            // showCollisions:true,
+            // showPositions:true,
+            // showSensors:true,
+            // showBody: true,
+            // showStaticBody: true
+            // }
         },
         arcade: {
             debug: true,
@@ -57,5 +57,4 @@ export const config: Phaser.Types.Core.GameConfig = {
         MarbleGameScene,
     ],
 }
- 
 const game = new Phaser.Game(config)
