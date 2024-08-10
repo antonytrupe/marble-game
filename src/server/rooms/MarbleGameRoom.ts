@@ -4,6 +4,7 @@ import { InputData } from "@/InputData"
 import { Player } from "@/Player"
 import { getAngle, getMagnitude, getVelocity, normalize } from "@/functions"
 import { Bodies, Body, Composite, Engine } from "matter-js"
+import World from "@/World"
 
 
 export class MarbleGameRoom extends Room<RoomState> {
@@ -32,6 +33,8 @@ export class MarbleGameRoom extends Room<RoomState> {
     //let elapsedTime = 0
     this.setSimulationInterval((deltaTime) => this.update(deltaTime))
   }
+
+  world: World = new World()
 
   update(deltaTime: number) {
 
@@ -71,49 +74,36 @@ export class MarbleGameRoom extends Room<RoomState> {
 
         switch (input) {
           case "keydown-W":
-            {
-              const v = getVelocity(entity.angle, 1)
-              player.velocity.x = v.x
-              player.velocity.y = v.y
-              //player.velocity.setDirty()
-              Body.setVelocity(entity, v)
-              break
-            }
+            this.world.moveForward(entity, player)
+            break
           case "keyup-W":
-            player.velocity.x = 0
-            player.velocity.y = 0
-            Body.setVelocity(entity, { x: 0, y: 0 })
+            this.world.stopMoving(entity, player)
             break
           case "keydown-S":
-            {
-              const v = getVelocity(entity.angle, -1)
-              player.velocity.x = v.x
-              player.velocity.y = v.y
-              Body.setVelocity(entity, getVelocity(entity.angle, -1))
-              break
-            }
-          case "keyup-S":
-            player.velocity.x = 0
-            player.velocity.y = 0
-            Body.setVelocity(entity, { x: 0, y: 0 })
+            this.world.moveBackward(entity, player)
             break
-          case "keydown-D": 13
-            player.angularVelocity = 0.1
-            Body.setAngularVelocity(entity, player.angularVelocity)
+          case "keyup-S":
+            this.world.stopMoving(entity, player)
+            break
+          case "keydown-D":
+            this.world.turnRight(entity, player)
             break
           case "keyup-D":
-            player.angularVelocity = 0
-            Body.setAngularVelocity(entity, player.angularVelocity)
+            this.world.stopTurning(entity, player)
             break
           case "keydown-A":
-            player.angularVelocity = -0.1
-            Body.setAngularVelocity(entity, player.angularVelocity)
+            this.world.turnLeft(entity, player)
             break
           case "keyup-A":
-            player.angularVelocity = 0
-            Body.setAngularVelocity(entity, player.angularVelocity)
+            this.world.stopTurning(entity, player)
             break
         }
+      }
+      if (player.angularVelocity != 0 || player.velocity.x !== 0 || player.velocity.y !== 0) {
+        Body.setStatic(entity, false)
+      }
+      else {
+        Body.setStatic(entity, true)
       }
     })
     // if (deltaTime >= 16.667)
@@ -134,13 +124,14 @@ export class MarbleGameRoom extends Room<RoomState> {
     player.angularVelocity = 0
 
     const circle = Bodies.circle(player.position.x, player.position.y, 10, { friction: 1, frictionAir: 0, frictionStatic: 0, inertia: Infinity })
-
+    circle.restitution = 0
+    Body.setStatic(circle, true)
     player.id = circle.id
 
     Composite.add(this.engine.world, [circle])
 
     this.state.players.set(client.sessionId, player)
-    console.log(player.toJSON())
+    // console.log(player.toJSON())
   }
 
   onLeave(client: Client, consented: boolean) {

@@ -2,7 +2,9 @@
   "compilerOptions": {
     "baseUrl": ".", // root of your "paths" below. Required if "paths" is defined
     "paths": {
-      "@/*": ["src/*"] // enables us to use @components/MyComponent
+      "@/*": [
+        "src/*"
+      ]
     },
     "target": "es2016",
     "module": "commonjs",
@@ -10,6 +12,8 @@
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
     "strict": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "jsxImportSource": "preact",
+    "isolatedModules": true
   }
 }
