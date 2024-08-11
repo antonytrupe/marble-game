@@ -12,4 +12,6 @@ import { listen } from "@colyseus/tools"
 import appConfig from "./app.config"
 
 // Create and listen on 2567 (or PORT environment variable.)
-listen(appConfig)
+listen(appConfig).then((server)=>{
+    
+})

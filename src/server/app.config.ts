@@ -23,8 +23,8 @@ export default config({
         /**
          * Define your room handlers:
          */
-        gameServer.define('marbleGame1', MarbleGameRoom )
-        gameServer.define('marbleGame2', MarbleGameRoom)
+        gameServer.define('marbleGame1', MarbleGameRoom ,{}).enableRealtimeListing()
+        gameServer.define('marbleGame2', MarbleGameRoom).enableRealtimeListing()
         gameServer
             .define("lobby", LobbyRoom)
         //

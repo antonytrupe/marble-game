@@ -10,20 +10,24 @@ import World from "@/World"
 export class MarbleGameRoom extends Room<RoomState> {
 
   engine: Engine
+  world: World = new World()
 
   onCreate(options: any) {
-    console.log('MarbleGameRoom onCreate')
+    // console.log('MarbleGameRoom onCreate')
     // console.log(options)
     this.setState(new RoomState())
-    console.log(this.roomName)
- 
+    // console.log(this.roomName)
+
     this.setMetadata({
-      customData: "Hello world!"+this.roomName
+      description: "Marble Game " + this.roomName.substring(10),
+      sceneName: 'MarbleGameScene'
     })
-      .then(() => updateLobby(this))
+      .then(() => {
+        // console.log('updateLobby', this.roomName)
+        updateLobby(this)
+      })
 
-
-
+ 
     this.engine = Engine.create({ gravity: { x: 0, y: 0 } })
 
     //set map dimensions
@@ -42,8 +46,6 @@ export class MarbleGameRoom extends Room<RoomState> {
     //let elapsedTime = 0
     this.setSimulationInterval((deltaTime) => this.update(deltaTime))
   }
-
-  world: World = new World()
 
   update(deltaTime: number) {
 
@@ -149,6 +151,6 @@ export class MarbleGameRoom extends Room<RoomState> {
   }
 
   onDispose() {
-    console.log("room", this.roomId, "disposing...")
+    console.log("room", this.roomId, this.roomName, "disposing...")
   }
 }

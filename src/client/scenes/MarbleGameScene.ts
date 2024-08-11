@@ -275,27 +275,7 @@ export class MarbleGameScene extends Phaser.Scene {
 
         const client = new Client(BACKEND_URL)
 
-        // const lobby = await client.joinOrCreate("lobby");
-
-        // let allRooms: RoomAvailable[] = [];
-
-        // lobby.onMessage("rooms", (rooms) => {
-        //     allRooms = rooms;
-        // });
-
-        // lobby.onMessage("+", ([roomId, room]) => {
-        //     const roomIndex = allRooms.findIndex((room) => room.roomId === roomId);
-        //     if (roomIndex !== -1) {
-        //         allRooms[roomIndex] = room;
-
-        //     } else {
-        //         allRooms.push(room);
-        //     }
-        // });
-
-        // lobby.onMessage("-", (roomId) => {
-        //     allRooms = allRooms.filter((room) => room.roomId !== roomId);
-        // });
+        
 
 
         try {

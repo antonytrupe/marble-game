@@ -1,6 +1,6 @@
 import Phaser from "phaser"
 
-import { SceneSelector } from "./scenes/SceneSelector"
+import { WorldListScene } from "./scenes/WorldListScene"
 import { MarbleGameScene } from "./scenes/MarbleGameScene"
 
 const matterContainer = document.querySelector('#matter-container') as HTMLElement
@@ -50,7 +50,7 @@ export const config: Phaser.Types.Core.GameConfig = {
     },
 
     pixelArt: true,
-    scene: [SceneSelector,
+    scene: [WorldListScene,
         // Part2Scene,
         // Part3Scene,
         // Part4Scene,
