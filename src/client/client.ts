@@ -2,6 +2,7 @@ import Phaser from "phaser"
 
 import { WorldListScene } from "./scenes/WorldListScene"
 import { MarbleGameScene } from "./scenes/MarbleGameScene"
+import { HudScene } from "./scenes/HudScene"
 
 const matterContainer = document.querySelector('#matter-container') as HTMLElement
 
@@ -18,7 +19,9 @@ export const config: Phaser.Types.Core.GameConfig = {
     // height: 200,
     backgroundColor: '#f8f8f0',
     parent: matterContainer,
-
+    dom: {
+        createContainer: true
+    },
     physics: {
         default: "matter",
         matter: {
@@ -32,16 +35,17 @@ export const config: Phaser.Types.Core.GameConfig = {
                 x: 0
             },
 
-            // debug: {
-            // showVelocity:true,
-            // showAxes:true,
-            // showAngleIndicator:true,
-            // showCollisions:true,
-            // showPositions:true,
-            // showSensors:true,
-            // showBody: true,
-            // showStaticBody: true
-            // }
+            debug: {
+                showBody: true
+                // showVelocity:true,
+                // showAxes:true,
+                // showAngleIndicator:true,
+                // showCollisions:true,
+                // showPositions:true,
+                // showSensors:true,
+                // showBody: true,
+                // showStaticBody: true
+            }
         },
         arcade: {
             debug: true,
@@ -51,10 +55,23 @@ export const config: Phaser.Types.Core.GameConfig = {
 
     pixelArt: true,
     scene: [WorldListScene,
-        // Part2Scene,
-        // Part3Scene,
-        // Part4Scene,
+        HudScene,
         MarbleGameScene,
     ],
 }
 const game = new Phaser.Game(config)
+
+export const respondToVisibility = (element, callback) => {
+    // console.log('element',element)
+    var options = {
+        root: null,
+    };
+
+    var observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            callback(entry.intersectionRatio > 0);
+        });
+    }, options);
+
+    observer.observe(element);
+}

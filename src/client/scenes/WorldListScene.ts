@@ -5,14 +5,7 @@ import { BACKEND_URL } from "../backend"
 
 export class WorldListScene extends Phaser.Scene {
 
-    parts = [
-        // '1': {description:"Basic Player Movement",name:'part1'},
-        // '2': {description:"Interpolation",name:'part4'},
-        // '3': {description:"Client-predicted Input",name:'part3'},
-        // '4': { description: "Fixed Tickrate", name: 'part4' },
-        { description: 'Marble Game 1', sceneName: 'marbleGame', roomName: 'marbleGame1' },
-        { description: 'Marble Game 2', sceneName: 'marbleGame', roomName: 'marbleGame2' }
-    ]
+    worlds:RoomAvailable[] = []
     worldsGroup: Phaser.GameObjects.Group
 
     constructor() {
@@ -51,46 +44,27 @@ export class WorldListScene extends Phaser.Scene {
 
         const lobby = await client.joinOrCreate("lobby")
 
-        let allRooms: any[] = []
+        // let allRooms: any[] = []
 
         lobby.onMessage("rooms", (rooms) => {
-            // console.log(rooms)
-            allRooms = rooms.map((r: { metadata: { description: any; sceneName: any }; name: any }) => {
-                // console.log(r)
-                return {
-                    description: r.metadata.description,
-                    sceneName: r.metadata.sceneName,
-                    roomName: r.name
-                }
-            })
-            // console.log(allRooms)
-            //  this.parts = allRooms
+            console.log(rooms)
+              console.log(rooms)
+            this.worlds = rooms
         })
 
         lobby.onMessage("+", ([roomId, room]) => {
-            // console.log('new room', roomId, room)
-            const roomIndex = allRooms.findIndex((r) => {
-                // console.log(r.roomName)
-                // console.log(room.name)
-                return r.roomName === room.name
-            })
+            const roomIndex = this.worlds.findIndex((room) => room.roomId === roomId)
             if (roomIndex !== -1) {
-                allRooms[roomIndex] = room
-
+                this.worlds[roomIndex] = room
+          
             } else {
-                allRooms.push({
-                    description: room.metadata.description,
-                    sceneName: room.metadata.sceneName,
-                    roomName: room.name
-                })
+                this.worlds.push(room)
             }
-            // console.log(allRooms)
-        })
+          })
 
-        lobby.onMessage("-", (roomId) => {
-            // console.log('old room', roomId)
-            allRooms = allRooms.filter((room) => room.roomId !== roomId)
-        })
+          lobby.onMessage("-", (roomId) => {
+            this.worlds = this.worlds.filter((room) => room.roomId !== roomId)
+          })
     }
 
     update() {
@@ -104,16 +78,17 @@ export class WorldListScene extends Phaser.Scene {
             fontFamily: "Arial"
         }
 
-        this.parts.forEach((part, i) => {
+        this.worlds.forEach((room,i) => {
 
-            const description = part.description
-            const sceneName = part.sceneName
-            const roomName = part.roomName
+            const description = room.metadata.description
+            const sceneName = room.metadata.sceneName
+            const roomName = room.name
 
             const t = this.make.text({ x: 130, y: 150 + 70 * i, text: `${description}`, style: textStyle })
                 .setInteractive()
                 .setPadding(6)
                 .on("pointerdown", () => {
+                    console.log(sceneName, roomName)
                     this.runScene(sceneName, roomName)
                 })
 
@@ -124,7 +99,9 @@ export class WorldListScene extends Phaser.Scene {
     runScene(sceneName: string, roomName: string) {
         // console.log('run scene', sceneName, roomName)
         // this.game.scene.switch("selector", key)
-        this.game.scene.start(sceneName, { roomName })
+        this.scene.stop()
+        // console.log(this.game.scene)
+        this.scene.run(sceneName, { roomName })
         window.location.hash = sceneName + '|' + roomName
     }
 

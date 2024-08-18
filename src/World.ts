@@ -45,7 +45,12 @@ export default class World {
         Body.setAngularVelocity(entity, player.angularVelocity)
     }
 
-    setStatic(){
-        throw "not implemented"
+    setStatic(entity: Body, player: Player) {
+        if (player.angularVelocity != 0 || player.velocity.x !== 0 || player.velocity.y !== 0) {
+            Body.setStatic(entity, false)
+        }
+        else {
+             Body.setStatic(entity, true)
+        }
     }
 }

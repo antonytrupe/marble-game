@@ -7,8 +7,8 @@
     "dev:client": "parcel serve index.html --dist-dir dist/client/",
     "start:client": "parcel serve index.html",
     "build:client": "parcel build index.html --dist-dir dist/client/",
-    "dev:server": "tsx watch src/server/index.ts",
-    "start:server": "node dist/server/index.js",
+    "dev:server": "tsx watch src/server/server.ts",
+    "start:server": "node dist/server/server.js",
     "build:server": "tsc --project server.tsconfig.json",
     "//clean": "node node_modules/rimraf/bin lib",
     "test": "jest"
@@ -50,6 +50,7 @@
     "tsx": "^4.16.2"
   },
   "dependencies": {
+    "@colyseus/auth": "^0.15.10",
     "@colyseus/monitor": "^0.15.7",
     "@colyseus/tools": "^0.15.39",
     "@types/react": "^18.3.3",
@@ -62,9 +63,8 @@
     "parcel": "^2.12.0",
     "phaser": "^3.80.1"
   },
-  "//dependencies":{
+  "//dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
-
   }
 }

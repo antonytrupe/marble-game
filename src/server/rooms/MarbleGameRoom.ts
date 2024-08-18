@@ -8,15 +8,17 @@ import World from "@/World"
 
 
 export class MarbleGameRoom extends Room<RoomState> {
-
   engine: Engine
   world: World = new World()
 
   onCreate(options: any) {
+    this.autoDispose = false
+
     // console.log('MarbleGameRoom onCreate')
     // console.log(options)
     this.setState(new RoomState())
-    // console.log(this.roomName)
+    this.state.creation = new Date().getTime()
+    // console.log(this.roomName, this.roomId)
 
     this.setMetadata({
       description: "Marble Game " + this.roomName.substring(10),
@@ -27,7 +29,6 @@ export class MarbleGameRoom extends Room<RoomState> {
         updateLobby(this)
       })
 
- 
     this.engine = Engine.create({ gravity: { x: 0, y: 0 } })
 
     //set map dimensions
@@ -43,11 +44,28 @@ export class MarbleGameRoom extends Room<RoomState> {
       player.inputQueue.push(input)
     })
 
+    this.onMessage('chat', (client, input) => {
+      console.log(client.sessionId, input)
+      //handle player input
+      const player = this.state.players.get(client.sessionId)
+
+      //enqueue input to user input buffer.
+      //player.inputQueue.push(input)
+    })
+
     //let elapsedTime = 0
     this.setSimulationInterval((deltaTime) => this.update(deltaTime))
   }
 
   update(deltaTime: number) {
+    const now = new Date().getTime()
+    // console.log(now - this.state.creation)
+    //turn logic
+    const newTurnNumber = Math.floor((now - this.state.creation )/ (6 * 1000))
+    if (this.state.turnNumber != newTurnNumber) {
+        // console.log('newTurnNumber',newTurnNumber)
+      this.state.turnNumber = newTurnNumber
+    }
 
     Engine.update(this.engine, deltaTime / 1)
     this.state.players.forEach(player => {
@@ -56,12 +74,17 @@ export class MarbleGameRoom extends Room<RoomState> {
       // Body.setAngle(entity, normalize(entity.angle))
       player.angle = entity.angle
 
-
       player.angularVelocity = entity.angularVelocity
-
       player.velocity.x = entity.velocity.x
       player.velocity.y = entity.velocity.y
+      // entity.velocity.x = player.velocity.x
+      // entity.velocity.y = player.velocity.y
       const m = getMagnitude(player.velocity)
+      if (m > 0) {
+        // console.log(m)
+        // console.log(entity.velocity)
+
+      }
       // if (entity.speed != 0) {
       //   const velocity_angle = getAngle(entity.velocity)
       //    // console.log('a', a)
@@ -110,12 +133,8 @@ export class MarbleGameRoom extends Room<RoomState> {
             break
         }
       }
-      if (player.angularVelocity != 0 || player.velocity.x !== 0 || player.velocity.y !== 0) {
-        Body.setStatic(entity, false)
-      }
-      else {
-        Body.setStatic(entity, true)
-      }
+      this.world.setStatic(entity, player)
+
     })
     // if (deltaTime >= 16.667)
     //   console.log(deltaTime)
@@ -124,30 +143,42 @@ export class MarbleGameRoom extends Room<RoomState> {
   }
 
   onJoin(client: Client, options: any) {
-    console.log(client.sessionId, "joined marblegame!")
+    console.log(client.sessionId, "joined ", this.metadata.description)
+    // const x = Math.random() * this.state.mapWidth / 2 + this.state.mapWidth / 4
+    // const y = Math.random() * this.state.mapHeight / 2 + this.state.mapWidth / 4
+    const x = Math.random() * this.state.mapWidth
+    const y = Math.random() * this.state.mapHeight
+    const player = new Player({ x, y })
 
-    const player = new Player()
-    player.position.x = Math.random() * this.state.mapWidth / 2 + this.state.mapWidth / 4
-    player.position.y = Math.random() * this.state.mapHeight / 2 + this.state.mapWidth / 4
-    player.velocity.x = 0
-    player.velocity.y = 0
+    // player.velocity.x = 0
+    // player.velocity.y = 0
     player.angle = 0
     player.angularVelocity = 0
 
-    const circle = Bodies.circle(player.position.x, player.position.y, 10, { friction: 1, frictionAir: 0, frictionStatic: 0, inertia: Infinity })
-    circle.restitution = 0
-    Body.setStatic(circle, true)
-    player.id = circle.id
+    const circle = Bodies.circle(player.position.x, player.position.y, 16,
+      {
+        // friction: 1,
+        frictionAir: .1,
+        // frictionStatic: 10
+      })
 
+    // circle.restitution = 0
+    this.world.setStatic(circle, player)
+
+    player.id = circle.id
+    player.body = circle
     Composite.add(this.engine.world, [circle])
 
     this.state.players.set(client.sessionId, player)
+    // console.log('player count', this.state.players.size)
+    // console.log('body count', Composite.allBodies(this.engine.world).length)
     // console.log(player.toJSON())
   }
 
   onLeave(client: Client, consented: boolean) {
     console.log(client.sessionId, "left!")
-    this.state.players.delete(client.sessionId)
+    // Composite.remove(this.engine.world,this.state.players.get(client.sessionId).body)
+    // this.state.players.delete(client.sessionId)
   }
 
   onDispose() {
