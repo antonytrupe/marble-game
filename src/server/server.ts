@@ -7,9 +7,10 @@ import { monitor } from "@colyseus/monitor"
 let gameServerRef: Server
 let latencySimulationMs: number = 0
 
+
 auth.oauth.addProvider('google', {
-    key: "800182763943-a2idabq1lou7p9aeu904e62p6qsq373i.apps.googleusercontent.com", // Client ID
-    secret: "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", // Client Secret
+    key: process.env.GOOGLE_KEY, // Client ID
+    secret: process.env.GOOGLE_SECRET, // Client Secret
     scope: ['email'],//'identify', 
 });
 

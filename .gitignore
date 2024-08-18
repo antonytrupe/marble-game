@@ -6,3 +6,4 @@ client/dist/
 dist/
 .devmode.json
 .vscode/settings.json
+.env.development.backup
