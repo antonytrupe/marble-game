@@ -1,13 +1,9 @@
-import { Schema, type } from "@colyseus/schema"
+import { Schema, type, ArraySchema } from "@colyseus/schema"
 import { InputData } from "./InputData"
 import { Scene } from "phaser"
-import { Bodies, Body, World } from "matter-js"
-import { BodyType } from "matter"
-
-export class Vector extends Schema {
-  @type("number") x: number
-  @type("number") y: number
-}
+import { Body, World } from "matter-js"
+import { Message } from "./Message"
+import { Vector } from "./Vector"
 
 export class Player extends Schema {
   inputQueue: InputData[] = []
@@ -21,11 +17,12 @@ export class Player extends Schema {
   @type("number") angularVelocity: number
   @type('string') name: string
 
+  @type([Message]) messages = new ArraySchema<Message>()
 
   constructor(data: { x: number; y: number; scene?: World }) {
     super();
-    ({ x: this.position.x, y:this.position.y} = data)
-    
+    ({ x: this.position.x, y: this.position.y } = data)
+
   }
 
   static preload(scene: Scene) {

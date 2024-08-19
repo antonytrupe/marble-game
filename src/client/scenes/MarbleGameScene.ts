@@ -12,27 +12,21 @@
 import Phaser from "phaser"
 import { Room, Client } from "colyseus.js"
 import { BACKEND_URL } from "../backend"
-import { RoomState } from "@/RoomState"
+import { WorldSchema } from "@/WorldSchema"
 import { Player } from "@/Player"
+import { Message } from "@/Message"
 import { getVelocity } from "@/functions"
 import World from "@/World"
 import { Body } from "matter-js"
 import { respondToVisibility } from "../client"
+import ChatBubble from "../ChatBubble"
 
 //const room_name = "marble_game"
 export class MarbleGameScene extends Phaser.Scene {
-    room: Room<RoomState>
+    room: Room<WorldSchema>
 
     currentPlayer: Phaser.Physics.Matter.Image
     playerEntities: { [sessionId: string]: Phaser.Physics.Matter.Image } = {}
-
-    //debugFPS: Phaser.GameObjects.Text
-
-    //localRef: Phaser.GameObjects.Arc
-    //remoteRef: Phaser.GameObjects.Arc
-
-    //elapsedTime = 0
-    //fixedTimeStep = 1000 / 60
 
     keys: object
     world: World = new World()
@@ -41,8 +35,11 @@ export class MarbleGameScene extends Phaser.Scene {
     textInput: Phaser.GameObjects.DOMElement
     debug: Phaser.GameObjects.Text
     g: Phaser.GameObjects.Group
+    map: Phaser.Tilemaps.Tilemap;
+    chatMode: boolean = false
 
     constructor() {
+        console.log('scene constructor')
         super({
             key: 'MarbleGameScene',
             physics: {
@@ -57,8 +54,6 @@ export class MarbleGameScene extends Phaser.Scene {
         this.load.image('scale')
         this.load.html("input", "input.html")
         Player.preload(this)
-
-
     }
 
     init(data: { roomName: string }): void {
@@ -67,7 +62,7 @@ export class MarbleGameScene extends Phaser.Scene {
 
     }
 
-    chatMode: boolean = false
+
 
     update(time: number, delta: number): void {
         //console.log('update')
@@ -90,35 +85,16 @@ export class MarbleGameScene extends Phaser.Scene {
             // console.log('enter down')
             // this.textInputToggle = !this.textInputToggle
             this.chatMode = !this.chatMode
-            const text: HTMLInputElement = this.textInput.getChildByName("text") as HTMLInputElement
+            // const text: HTMLInputElement = this.textInput.getChildByName("text") as HTMLInputElement
             // console.log(document.activeElement)
 
             if (!this.chatMode) {
-                // this.input.keyboard.enabled=true
-
                 const text: HTMLInputElement = this.textInput.getChildByName("text") as HTMLInputElement
-                console.log('chat', text.value)
+                // console.log('chat', text.value)
                 this.room.send('chat', text.value)
                 text.value = ''
             }
-            else {
-
-                // this.input.keyboard.enabled=false
-                // console.log('focus')
-                //TODO make focus work
-                // text.focus()
-                console.log(document.getElementById('text'))
-                document.getElementById('text').focus()
-                // console.log(document.activeElement)
-                // document.activeElement=text
-
-            }
-
-            // this.room.send(0, 'keydown-W')
         }
-
-
-
 
         this.textInput.setVisible(this.chatMode)
         // this.textInput.
@@ -127,10 +103,7 @@ export class MarbleGameScene extends Phaser.Scene {
         this.textInput.y = this.currentPlayer.y + this.currentPlayer.height / 2 + this.textInput.height / 2
         // this.textInput.width
 
-        if (this.chatMode) {
-            console.log()
-        }
-        else {
+        if (!this.chatMode) {
             if (Phaser.Input.Keyboard.JustDown(this.keys["W"])) {
                 this.world.moveForward(mb, p)
                 this.room.send(0, 'keydown-W')
@@ -192,19 +165,10 @@ export class MarbleGameScene extends Phaser.Scene {
             //}, false)
         }
 
-        //this.debugFPS.scale = 1 / this.cameras.main.zoom
-        //this.debugFPS.text = `Frame rate: ${this.game.loop.actualFps}`
     }
-
-    map: Phaser.Tilemaps.Tilemap;
-
 
     async create() {
         console.log('create')
-
-
-
-        // this.text = this.add.bitmapText(0, 0, 'nokia16').setScrollFactor(0);
 
         const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
             color: "#000000",
@@ -262,7 +226,6 @@ export class MarbleGameScene extends Phaser.Scene {
             document.getElementById('text').focus()
         })
 
-
         // this.g.add()
         this.debug = this.add.text(0, 0, 'DEBUG', { color: 'black' }).setScale(1).setScrollFactor(0)
         this.debug.y = this.cameras.main.height - this.debug.height
@@ -302,7 +265,7 @@ export class MarbleGameScene extends Phaser.Scene {
 
 
         this.room.state.onChange(() => {
-            //TODO
+            //TODO show the turn number somewhere
             this.debug
             console.log(this.room.state.turnNumber)
         })
@@ -353,7 +316,7 @@ export class MarbleGameScene extends Phaser.Scene {
         }
         // playerSprite.setFixedRotation()
         // playerSprite.setFriction(1)
-        playerSprite.setFrictionAir(.1)
+        playerSprite.setFrictionAir(0)
         // playerSprite.setFrictionStatic(10)
         // playerSprite.setInteractive()
         //console.log((entity.body as unknown as Body).id)
@@ -378,6 +341,9 @@ export class MarbleGameScene extends Phaser.Scene {
             this.cameras.main.startFollow(playerSprite, true, .7, .7)
         }
 
+        player.messages.onAdd((item, key) => {
+            this.onChat(item, key,player)
+        })
 
         player.velocity.onChange(() => {
             if (player.velocity !== undefined) {
@@ -424,6 +390,15 @@ export class MarbleGameScene extends Phaser.Scene {
                 this.matter.body.setAngularVelocity(mb, player.angularVelocity)
             }
         })
+    }
+
+    private onChat(item: Message, key: number, player: Player) {
+        console.log('from server', item.message, item.time, key)
+        this.add.existing(new ChatBubble({
+            scene: this, x: player.position.x, y: player.position.y, text: item.message,
+            player: player,
+            time: item.time
+        }))
     }
 
     async connect() {

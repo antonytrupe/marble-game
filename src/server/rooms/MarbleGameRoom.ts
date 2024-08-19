@@ -1,13 +1,14 @@
 import { Room, Client, updateLobby } from "colyseus"
-import { RoomState } from "@/RoomState"
+import { WorldSchema } from "@/WorldSchema"
 import { InputData } from "@/InputData"
 import { Player } from "@/Player"
+import { Message } from "@/Message"
 import { getMagnitude, getVelocity } from "@/functions"
 import { Bodies, Body, Composite, Engine } from "matter-js"
 import World from "@/World"
 
 
-export class MarbleGameRoom extends Room<RoomState> {
+export class MarbleGameRoom extends Room<WorldSchema> {
   engine: Engine
   world: World = new World()
 
@@ -16,7 +17,7 @@ export class MarbleGameRoom extends Room<RoomState> {
 
     // console.log('MarbleGameRoom onCreate')
     // console.log(options)
-    this.setState(new RoomState())
+    this.setState(new WorldSchema())
     this.state.creation = new Date().getTime()
     // console.log(this.roomName, this.roomId)
 
@@ -45,9 +46,7 @@ export class MarbleGameRoom extends Room<RoomState> {
     })
 
     this.onMessage('chat', (client, input) => {
-      console.log(client.sessionId, input)
-      //handle player input
-      const player = this.state.players.get(client.sessionId)
+      this.chat(client, input)
 
       //enqueue input to user input buffer.
       //player.inputQueue.push(input)
@@ -57,13 +56,20 @@ export class MarbleGameRoom extends Room<RoomState> {
     this.setSimulationInterval((deltaTime) => this.update(deltaTime))
   }
 
+  private chat(client, input: string) {
+    console.log(client.sessionId, input)
+    //handle player input
+    const player = this.state.players.get(client.sessionId)
+    player.messages.push(new Message(input))
+   }
+
   update(deltaTime: number) {
     const now = new Date().getTime()
     // console.log(now - this.state.creation)
     //turn logic
-    const newTurnNumber = Math.floor((now - this.state.creation )/ (6 * 1000))
+    const newTurnNumber = Math.floor((now - this.state.creation) / (6 * 1000))
     if (this.state.turnNumber != newTurnNumber) {
-        // console.log('newTurnNumber',newTurnNumber)
+      // console.log('newTurnNumber',newTurnNumber)
       this.state.turnNumber = newTurnNumber
     }
 
@@ -158,7 +164,7 @@ export class MarbleGameRoom extends Room<RoomState> {
     const circle = Bodies.circle(player.position.x, player.position.y, 16,
       {
         // friction: 1,
-        frictionAir: .1,
+        frictionAir: 0,
         // frictionStatic: 10
       })
 

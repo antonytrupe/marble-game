@@ -69,9 +69,9 @@ export const respondToVisibility = (element, callback) => {
 
     var observer = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
-            callback(entry.intersectionRatio > 0);
+            callback(entry.intersectionRatio > 0)
         });
-    }, options);
+    }, options)
 
-    observer.observe(element);
+    observer.observe(element)
 }
