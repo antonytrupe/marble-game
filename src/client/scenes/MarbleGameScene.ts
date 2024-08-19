@@ -341,8 +341,8 @@ export class MarbleGameScene extends Phaser.Scene {
             this.cameras.main.startFollow(playerSprite, true, .7, .7)
         }
 
-        player.messages.onAdd((item, key) => {
-            this.onChat(item, key,player)
+        player.messages.onAdd((item) => {
+            this.onChat(item, player)
         })
 
         player.velocity.onChange(() => {
@@ -392,12 +392,12 @@ export class MarbleGameScene extends Phaser.Scene {
         })
     }
 
-    private onChat(item: Message, key: number, player: Player) {
-        console.log('from server', item.message, item.time, key)
+    private onChat(message: Message, player: Player) {
+        // console.log('from server', item.message, item.time, key)
         this.add.existing(new ChatBubble({
-            scene: this, x: player.position.x, y: player.position.y, text: item.message,
-            player: player,
-            time: item.time
+            scene: this, message: message,
+            player: player
+
         }))
     }
 
