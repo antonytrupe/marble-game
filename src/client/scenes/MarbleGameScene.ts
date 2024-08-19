@@ -31,10 +31,9 @@ export class MarbleGameScene extends Phaser.Scene {
     keys: object
     world: World = new World()
     roomName: string
-    scaleSprite: Phaser.GameObjects.TileSprite
+
     textInput: Phaser.GameObjects.DOMElement
-    debug: Phaser.GameObjects.Text
-    g: Phaser.GameObjects.Group
+
     map: Phaser.Tilemaps.Tilemap;
     chatMode: boolean = false
 
@@ -51,9 +50,9 @@ export class MarbleGameScene extends Phaser.Scene {
     preload() {
         console.log('preload')
         this.load.image('background')
-        this.load.image('scale')
         this.load.html("input", "input.html")
         Player.preload(this)
+
     }
 
     init(data: { roomName: string }): void {
@@ -61,8 +60,6 @@ export class MarbleGameScene extends Phaser.Scene {
         this.roomName = data.roomName
 
     }
-
-
 
     update(time: number, delta: number): void {
         //console.log('update')
@@ -177,6 +174,7 @@ export class MarbleGameScene extends Phaser.Scene {
             backgroundColor: "white"
         }
 
+
         const mapData = [];
 
         // for (let y = 0; y < this.mapHeight; y++)
@@ -199,7 +197,6 @@ export class MarbleGameScene extends Phaser.Scene {
         // const tileset = this.map.addTilesetImage('background');
         // const layer = this.map.createLayer(0, tileset, 0, 0);
 
-
         // try {
         //     const userdata = await Client.auth.signInWithProvider('discord');
         //     console.log(userdata);
@@ -217,7 +214,6 @@ export class MarbleGameScene extends Phaser.Scene {
         this.add.tileSprite(0, 1024, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(512, 1024, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(1024, 1024, 512, 512, 'background')//.setOrigin(0)
-        this.scaleSprite = this.add.tileSprite(0, 0, 108, 10, 'scale').setOrigin(0).setScrollFactor(0)
         // this.textInput = this.add.text(0, 0, 'blah blah blah', textStyle)//.setScrollFactor(0)
         this.textInput = this.add.dom(100, 100).createFromCache("input")
 
@@ -225,12 +221,6 @@ export class MarbleGameScene extends Phaser.Scene {
             // console.log('visible', visible)
             document.getElementById('text').focus()
         })
-
-        // this.g.add()
-        this.debug = this.add.text(0, 0, 'DEBUG', { color: 'black' }).setScale(1).setScrollFactor(0)
-        this.debug.y = this.cameras.main.height - this.debug.height
-
-        //this.cameras.main.zoom = 2.3
 
         this.cameras.main.setRotation(0)
 
@@ -259,15 +249,15 @@ export class MarbleGameScene extends Phaser.Scene {
         //this.debugFPS = this.add.text(4, 4, "", { color: "#ff0000", })
         //this.debugFPS.setScrollFactor(0)
 
-
         //connect with the room
         await this.connect()
 
+        this.scene.launch('HUD')
 
         this.room.state.onChange(() => {
             //TODO show the turn number somewhere
-            this.debug
-            console.log(this.room.state.turnNumber)
+            this.registry.set('turnNumber', this.room.state.turnNumber)
+            // console.log(this.room.state.turnNumber)
         })
 
         this.room.state.players.onAdd((player, sessionId: string) => {
@@ -293,7 +283,7 @@ export class MarbleGameScene extends Phaser.Scene {
     }
 
     private onAdd(sessionId: string, player: Player) {
-        console.log(sessionId, 'joined marblegame')
+        // console.log(sessionId, 'joined marblegame')
 
         let playerSprite: Phaser.Physics.Matter.Sprite
         {
@@ -373,7 +363,6 @@ export class MarbleGameScene extends Phaser.Scene {
             // this.matter.body.setStatic(mb, true)
             this.world.setStatic(playerSprite.body as unknown as Body, player)
             // this.matter.body.setStatic(mb, false)
-
 
             if (player.angle !== undefined) {
                 //console.log('angle', player.angle)

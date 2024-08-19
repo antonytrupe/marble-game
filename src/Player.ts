@@ -22,7 +22,6 @@ export class Player extends Schema {
   constructor(data: { x: number; y: number; scene?: World }) {
     super();
     ({ x: this.position.x, y: this.position.y } = data)
-
   }
 
   static preload(scene: Scene) {

@@ -7,7 +7,6 @@ import { getMagnitude, getVelocity } from "@/functions"
 import { Bodies, Body, Composite, Engine } from "matter-js"
 import World from "@/World"
 
-
 export class MarbleGameRoom extends Room<WorldSchema> {
   engine: Engine
   world: World = new World()
@@ -105,7 +104,6 @@ export class MarbleGameRoom extends Room<WorldSchema> {
 
       player.position.x = entity.position.x
       player.position.y = entity.position.y
-
 
       //dequeue player inputs
       let input: InputData

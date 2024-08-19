@@ -36,10 +36,10 @@ export const config: Phaser.Types.Core.GameConfig = {
             },
 
             debug: {
-                showBody: true
+                showBody: true,
                 // showVelocity:true,
                 // showAxes:true,
-                // showAngleIndicator:true,
+                showAngleIndicator: true,
                 // showCollisions:true,
                 // showPositions:true,
                 // showSensors:true,
@@ -54,9 +54,10 @@ export const config: Phaser.Types.Core.GameConfig = {
     },
 
     pixelArt: true,
-    scene: [WorldListScene,
-        HudScene,
+    scene: [
+        WorldListScene,
         MarbleGameScene,
+        HudScene,
     ],
 }
 const game = new Phaser.Game(config)
