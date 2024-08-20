@@ -2,8 +2,7 @@ export class HudScene extends Phaser.Scene {
     debug: Phaser.GameObjects.Text
     // g: Phaser.GameObjects.Container
     scaleSprite: Phaser.GameObjects.TileSprite
-    room: any
-
+ 
     constructor() {
         super({
             key: 'HUD',

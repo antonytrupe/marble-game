@@ -3,6 +3,7 @@ import Phaser from "phaser"
 import { WorldListScene } from "./scenes/WorldListScene"
 import { MarbleGameScene } from "./scenes/MarbleGameScene"
 import { HudScene } from "./scenes/HudScene"
+import { TestScene } from "./scenes/TestScene"
 
 const matterContainer = document.querySelector('#matter-container') as HTMLElement
 
@@ -29,7 +30,6 @@ export const config: Phaser.Types.Core.GameConfig = {
             autoUpdate: true,
             enableSleeping: false,
             frictionNormalMultiplier: 1,
-
             gravity: {
                 y: 0,
                 x: 0
@@ -58,6 +58,7 @@ export const config: Phaser.Types.Core.GameConfig = {
         WorldListScene,
         MarbleGameScene,
         HudScene,
+        TestScene,
     ],
 }
 const game = new Phaser.Game(config)

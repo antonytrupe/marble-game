@@ -5,7 +5,7 @@ import { BACKEND_URL } from "../backend"
 
 export class WorldListScene extends Phaser.Scene {
 
-    worlds:RoomAvailable[] = []
+    worlds: RoomAvailable[] = []
     worldsGroup: Phaser.GameObjects.Group
 
     constructor() {
@@ -16,12 +16,6 @@ export class WorldListScene extends Phaser.Scene {
         // update menu background color
         this.cameras.main.setBackgroundColor(0xf0f0f0)
         this.worldsGroup = this.add.group()
-
-        // preload demo assets
-        // this.load.image('ship_0001')
-        // this.load.image('background' )
-
-        // this.load.image('ship_0001', 'https://cdn.glitch.global/3e033dcd-d5be-4db4-99e8-086ae90969ec/ship_0001.png?v=1649945243288')
     }
 
     async create() {
@@ -29,7 +23,7 @@ export class WorldListScene extends Phaser.Scene {
         if (window.location.hash) {
             // console.log('hash')
             const hashParts = window.location.hash.substring(1).split('|')
-            // console.log(hashParts)
+            console.log(hashParts)
             this.runScene(hashParts[0], hashParts[1])
             return
         }
@@ -47,8 +41,6 @@ export class WorldListScene extends Phaser.Scene {
         // let allRooms: any[] = []
 
         lobby.onMessage("rooms", (rooms) => {
-            console.log(rooms)
-              console.log(rooms)
             this.worlds = rooms
         })
 
@@ -56,15 +48,15 @@ export class WorldListScene extends Phaser.Scene {
             const roomIndex = this.worlds.findIndex((room) => room.roomId === roomId)
             if (roomIndex !== -1) {
                 this.worlds[roomIndex] = room
-          
+
             } else {
                 this.worlds.push(room)
             }
-          })
+        })
 
-          lobby.onMessage("-", (roomId) => {
+        lobby.onMessage("-", (roomId) => {
             this.worlds = this.worlds.filter((room) => room.roomId !== roomId)
-          })
+        })
     }
 
     update() {
@@ -78,8 +70,8 @@ export class WorldListScene extends Phaser.Scene {
             fontFamily: "Arial"
         }
 
-        this.worlds.forEach((room,i) => {
-
+        this.worlds.forEach((room, i) => {
+            //TODO keep track of what rooms we've already added
             const description = room.metadata.description
             const sceneName = room.metadata.sceneName
             const roomName = room.name
@@ -102,7 +94,7 @@ export class WorldListScene extends Phaser.Scene {
         this.scene.stop()
         // console.log(this.game.scene)
         this.scene.run(sceneName, { roomName })
-        window.location.hash = sceneName + '|' + roomName
+        window.location.hash = sceneName + (!!roomName ? '|' + roomName : '')
     }
 
 }

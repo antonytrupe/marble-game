@@ -13,11 +13,12 @@ export class Player extends Schema {
   @type(Vector) position: Vector = new Vector()
   @type(Vector) velocity: Vector = new Vector()
   // @type("number") speed: number
-  @type("number") angle: number
-  @type("number") angularVelocity: number
+  @type("number") angle: number = 0
+  @type("number") angularVelocity: number = 0
   @type('string') name: string
 
   @type([Message]) messages = new ArraySchema<Message>()
+  @type("number")speed: number=0
 
   constructor(data: { x: number; y: number; scene?: World }) {
     super();

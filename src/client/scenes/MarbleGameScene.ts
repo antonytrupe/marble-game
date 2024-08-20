@@ -20,15 +20,16 @@ import World from "@/World"
 import { Body } from "matter-js"
 import { respondToVisibility } from "../client"
 import ChatBubble from "../ChatBubble"
+import { Keys } from "./TestScene"
 
 //const room_name = "marble_game"
 export class MarbleGameScene extends Phaser.Scene {
     room: Room<WorldSchema>
 
-    currentPlayer: Phaser.Physics.Matter.Image
+    currentPlayer: Phaser.Physics.Matter.Sprite
     playerEntities: { [sessionId: string]: Phaser.Physics.Matter.Image } = {}
 
-    keys: object
+    keys: Keys
     world: World = new World()
     roomName: string
 
@@ -38,7 +39,7 @@ export class MarbleGameScene extends Phaser.Scene {
     chatMode: boolean = false
 
     constructor() {
-        console.log('scene constructor')
+        // console.log('scene constructor')
         super({
             key: 'MarbleGameScene',
             physics: {
@@ -101,35 +102,35 @@ export class MarbleGameScene extends Phaser.Scene {
         // this.textInput.width
 
         if (!this.chatMode) {
-            if (Phaser.Input.Keyboard.JustDown(this.keys["W"])) {
+            if (Phaser.Input.Keyboard.JustDown(this.keys.FORWARD)) {
                 this.world.moveForward(mb, p)
                 this.room.send(0, 'keydown-W')
             }
-            if (Phaser.Input.Keyboard.JustUp(this.keys["W"])) {
+            if (Phaser.Input.Keyboard.JustUp(this.keys.FORWARD)) {
                 this.world.stopMoving(mb, p)
                 this.room.send(0, 'keyup-W')
             }
-            if (Phaser.Input.Keyboard.JustDown(this.keys["S"])) {
+            if (Phaser.Input.Keyboard.JustDown(this.keys.BACKWARD)) {
                 this.world.moveBackward(mb, p)
                 this.room.send(0, 'keydown-S')
             }
-            if (Phaser.Input.Keyboard.JustUp(this.keys["S"])) {
+            if (Phaser.Input.Keyboard.JustUp(this.keys.BACKWARD)) {
                 this.world.stopMoving(mb, p)
                 this.room.send(0, 'keyup-S')
             }
-            if (Phaser.Input.Keyboard.JustDown(this.keys["D"])) {
+            if (Phaser.Input.Keyboard.JustDown(this.keys.RIGHT)) {
                 this.world.turnRight(mb, p)
                 this.room.send(0, 'keydown-D')
             }
-            if (Phaser.Input.Keyboard.JustUp(this.keys["D"])) {
+            if (Phaser.Input.Keyboard.JustUp(this.keys.RIGHT)) {
                 this.world.stopTurning(mb, p)
                 this.room.send(0, 'keyup-D')
             }
-            if (Phaser.Input.Keyboard.JustDown(this.keys["A"])) {
+            if (Phaser.Input.Keyboard.JustDown(this.keys.LEFT)) {
                 this.world.turnLeft(mb, p)
                 this.room.send(0, 'keydown-A')
             }
-            if (Phaser.Input.Keyboard.JustUp(this.keys["A"])) {
+            if (Phaser.Input.Keyboard.JustUp(this.keys.LEFT)) {
                 this.world.stopTurning(mb, p)
                 this.room.send(0, 'keyup-A')
             }
@@ -224,6 +225,15 @@ export class MarbleGameScene extends Phaser.Scene {
 
         this.cameras.main.setRotation(0)
 
+        this.keys = this.input.keyboard.addKeys(
+            {
+                UP: Phaser.Input.Keyboard.KeyCodes.W,
+                DOWN: Phaser.Input.Keyboard.KeyCodes.S,
+                LEFT: Phaser.Input.Keyboard.KeyCodes.A,
+                RIGHT: Phaser.Input.Keyboard.KeyCodes.D,
+                ENTER: Phaser.Input.Keyboard.KeyCodes.ENTER
+            }, false) as Keys
+
         this.input.on('wheel', (pointer: any, gameObjects: any, deltaX: any, deltaY: number, deltaZ: any) => {
             if (deltaY > 0) {
                 //console.log('zoom out')
@@ -243,8 +253,6 @@ export class MarbleGameScene extends Phaser.Scene {
             //this.scaleSprite.setScrollFactor( this.cameras.main.zoom)
             //this.get.tileSprite(0, 0, 108, 10, 'scale').setOrigin(0).setScrollFactor(0)
         })
-
-        this.keys = this.input.keyboard.addKeys('W,S,A,D,ENTER', false)
 
         //this.debugFPS = this.add.text(4, 4, "", { color: "#ff0000", })
         //this.debugFPS.setScrollFactor(0)
@@ -306,7 +314,7 @@ export class MarbleGameScene extends Phaser.Scene {
         }
         // playerSprite.setFixedRotation()
         // playerSprite.setFriction(1)
-        playerSprite.setFrictionAir(0)
+        // playerSprite.setFrictionAir(0)
         // playerSprite.setFrictionStatic(10)
         // playerSprite.setInteractive()
         //console.log((entity.body as unknown as Body).id)
