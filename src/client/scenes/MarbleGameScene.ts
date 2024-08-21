@@ -1,29 +1,19 @@
-/**
- * ---------------------------
- * Phaser + Colyseus - Part 4.
- * ---------------------------
- * - Connecting with the room
- * - Sending inputs at the user's framerate
- * - Update other player's positions WITH interpolation (for other players)
- * - Client-predicted input for local (current) player
- * - Fixed tickrate on both client and server
- */
-
 import Phaser from "phaser"
+import { Body } from "matter-js"
 import { Room, Client } from "colyseus.js"
-import { BACKEND_URL } from "../backend"
+import { BACKEND_URL } from "@/client/backend"
 import { WorldSchema } from "@/WorldSchema"
 import { Player } from "@/Player"
 import { Message } from "@/Message"
 import { getVelocity } from "@/functions"
 import World from "@/World"
-import { Body } from "matter-js"
-import { respondToVisibility } from "../client"
-import ChatBubble from "../ChatBubble"
-import { Keys } from "./TestScene"
+import { respondToVisibility } from "@/client/client"
+import ChatBubble from "@/client/ChatBubble"
+import { KEY_ACTION, Keys } from "@/Keys"
+import { SPEED, TURN_SPEED } from "@/SPEED";
 
-//const room_name = "marble_game"
 export class MarbleGameScene extends Phaser.Scene {
+
     room: Room<WorldSchema>
 
     currentPlayer: Phaser.Physics.Matter.Sprite
@@ -49,124 +39,20 @@ export class MarbleGameScene extends Phaser.Scene {
     }
 
     preload() {
-        console.log('preload')
+        console.log('MarbleGameScene preload')
         this.load.image('background')
         this.load.html("input", "input.html")
         Player.preload(this)
-
     }
 
-    init(data: { roomName: string }): void {
-        console.log('init', data)
-        this.roomName = data.roomName
-
-    }
-
-    update(time: number, delta: number): void {
-        //console.log('update')
-        //skip loop if not connected yet.
-
-        // console.log('scrollX', this.cameras.main.scrollX)
-        // console.log('width', this.cameras.main.width)
-
-        //this.room.connection.isOpen
-        if (!this.currentPlayer) { return }
-
-        //this.matter.composite.get(this.matter.world,this.currentPlayer,'body')
-        const [mb] = this.matter.getMatterBodies([this.currentPlayer]) as unknown as Body[]
-        //const mb=this.matter.composite.get(this.matter.world.localWorld as unknown as CompositeType, this.currentPlayer., 'body')
-        const p: Player = this.room.state.players.get(this.room.sessionId)
-        //console.log(mb.position)
-        //console.log(mb.angle)
-
-        if (Phaser.Input.Keyboard.JustDown(this.keys["ENTER"])) {
-            // console.log('enter down')
-            // this.textInputToggle = !this.textInputToggle
-            this.chatMode = !this.chatMode
-            // const text: HTMLInputElement = this.textInput.getChildByName("text") as HTMLInputElement
-            // console.log(document.activeElement)
-
-            if (!this.chatMode) {
-                const text: HTMLInputElement = this.textInput.getChildByName("text") as HTMLInputElement
-                // console.log('chat', text.value)
-                this.room.send('chat', text.value)
-                text.value = ''
-            }
-        }
-
-        this.textInput.setVisible(this.chatMode)
-        // this.textInput.
-        // console.log(this.currentPlayer.x)
-        this.textInput.x = this.currentPlayer.x - this.textInput.width / 2 + this.textInput.width / 2
-        this.textInput.y = this.currentPlayer.y + this.currentPlayer.height / 2 + this.textInput.height / 2
-        // this.textInput.width
-
-        if (!this.chatMode) {
-            if (Phaser.Input.Keyboard.JustDown(this.keys.FORWARD)) {
-                this.world.moveForward(mb, p)
-                this.room.send(0, 'keydown-W')
-            }
-            if (Phaser.Input.Keyboard.JustUp(this.keys.FORWARD)) {
-                this.world.stopMoving(mb, p)
-                this.room.send(0, 'keyup-W')
-            }
-            if (Phaser.Input.Keyboard.JustDown(this.keys.BACKWARD)) {
-                this.world.moveBackward(mb, p)
-                this.room.send(0, 'keydown-S')
-            }
-            if (Phaser.Input.Keyboard.JustUp(this.keys.BACKWARD)) {
-                this.world.stopMoving(mb, p)
-                this.room.send(0, 'keyup-S')
-            }
-            if (Phaser.Input.Keyboard.JustDown(this.keys.RIGHT)) {
-                this.world.turnRight(mb, p)
-                this.room.send(0, 'keydown-D')
-            }
-            if (Phaser.Input.Keyboard.JustUp(this.keys.RIGHT)) {
-                this.world.stopTurning(mb, p)
-                this.room.send(0, 'keyup-D')
-            }
-            if (Phaser.Input.Keyboard.JustDown(this.keys.LEFT)) {
-                this.world.turnLeft(mb, p)
-                this.room.send(0, 'keydown-A')
-            }
-            if (Phaser.Input.Keyboard.JustUp(this.keys.LEFT)) {
-                this.world.stopTurning(mb, p)
-                this.room.send(0, 'keyup-A')
-            }
-        }
-
-        //this.localRef.x = this.currentPlayer.x
-        //this.localRef.y = this.currentPlayer.y
-
-        for (let sessionId in this.playerEntities) {
-            //interpolate all player entities
-            //(except the current player)
-            if (sessionId === this.room.sessionId) {
-                //continue
-            }
-
-            const entity = this.playerEntities[sessionId]
-            const [mb] = this.matter.getMatterBodies([this.currentPlayer])
-
-            //TODO what about going backwards?
-            this.matter.body.setVelocity(mb, getVelocity(mb.angle, mb.speed))
-
-            //lerp
-            const { serverX, serverY } = entity.data.values
-
-            //entity.x = Phaser.Math.Linear(entity.x, serverX, 0.2)
-            //entity.y = Phaser.Math.Linear(entity.y, serverY, 0.2)
-            //this.matter.body.setPosition(mb, {
-            //x: Phaser.Math.Linear(entity.x, serverX, 0.2),
-            //y: Phaser.Math.Linear(entity.y, serverY, 0.2)
-            //}, false)
-        }
-
+    init({ multiplayer = false, roomName }: { multiplayer: boolean, roomName: string }): void {
+        console.log('MarbleGameScene init')
+        this.roomName = roomName
+        console.log(multiplayer)
     }
 
     async create() {
-        console.log('create')
+        console.log('MarbleGameScene create')
 
         const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
             color: "#000000",
@@ -227,8 +113,8 @@ export class MarbleGameScene extends Phaser.Scene {
 
         this.keys = this.input.keyboard.addKeys(
             {
-                UP: Phaser.Input.Keyboard.KeyCodes.W,
-                DOWN: Phaser.Input.Keyboard.KeyCodes.S,
+                FORWARD: Phaser.Input.Keyboard.KeyCodes.W,
+                BACKWARD: Phaser.Input.Keyboard.KeyCodes.S,
                 LEFT: Phaser.Input.Keyboard.KeyCodes.A,
                 RIGHT: Phaser.Input.Keyboard.KeyCodes.D,
                 ENTER: Phaser.Input.Keyboard.KeyCodes.ENTER
@@ -260,27 +146,193 @@ export class MarbleGameScene extends Phaser.Scene {
         //connect with the room
         await this.connect()
 
+
+
+
         this.scene.launch('HUD')
 
-        this.room.state.onChange(() => {
-            //TODO show the turn number somewhere
-            this.registry.set('turnNumber', this.room.state.turnNumber)
-            // console.log(this.room.state.turnNumber)
-        })
 
-        this.room.state.players.onAdd((player, sessionId: string) => {
-            //console.log(this.room.state.players.toJSON())
-            this.onAdd(sessionId, player)
-        })
-
-        //remove local reference when entity is removed from the server
-        this.room.state.players.onRemove((player, sessionId) => {
-            this.onRemove(sessionId)
-        })
         this.cameras.main.setZoom(1)
         //this.cameras.main.useBounds = false
         //this.cameras.main.setBounds(0, 0, 800, 600)
     }
+
+    update(time: number, delta: number): void {
+        // console.log('update')
+        //skip loop if not connected yet.
+
+        // console.log('scrollX', this.cameras.main.scrollX)
+        // console.log('width', this.cameras.main.width)
+
+        //this.room.connection.isOpen
+        if (!this.currentPlayer) { return }
+
+        //this.matter.composite.get(this.matter.world,this.currentPlayer,'body')
+        const [mb] = this.matter.getMatterBodies([this.currentPlayer]) as unknown as Body[]
+        //const mb=this.matter.composite.get(this.matter.world.localWorld as unknown as CompositeType, this.currentPlayer., 'body')
+        const currentPlayer: Player = this.room.state.players.get(this.room.sessionId)
+        //console.log(mb.position)
+        //console.log(mb.angle)
+
+        if (Phaser.Input.Keyboard.JustDown(this.keys.ENTER)) {
+            // console.log('enter down')
+            // this.textInputToggle = !this.textInputToggle
+            this.chatMode = !this.chatMode
+            // const text: HTMLInputElement = this.textInput.getChildByName("text") as HTMLInputElement
+            // console.log(document.activeElement)
+
+            if (!this.chatMode) {
+                const text: HTMLInputElement = this.textInput.getChildByName("text") as HTMLInputElement
+                // console.log('chat', text.value)
+                this.room.send('chat', text.value)
+                text.value = ''
+            }
+        }
+
+        this.textInput.setVisible(this.chatMode)
+        // this.textInput.
+        // console.log(this.currentPlayer.x)
+        this.textInput.x = this.currentPlayer.x - this.textInput.width / 2 + this.textInput.width / 2
+        this.textInput.y = this.currentPlayer.y + this.currentPlayer.height / 2 + this.textInput.height / 2
+        // this.textInput.width
+
+        if (!this.chatMode) {
+            // if (Phaser.Input.Keyboard.JustDown(this.keys.FORWARD)) {
+            //     this.world.moveForward(mb, currentPlayer)
+            //     this.room.send(0, 'keydown-W')
+            // }
+            // if (Phaser.Input.Keyboard.JustUp(this.keys.FORWARD)) {
+            //     this.world.stopMoving(mb, currentPlayer)
+            //     this.room.send(0, 'keyup-W')
+            // }
+            // if (Phaser.Input.Keyboard.JustDown(this.keys.BACKWARD)) {
+            //     this.world.moveBackward(mb, currentPlayer)
+            //     this.room.send(0, 'keydown-S')
+            // }
+            // if (Phaser.Input.Keyboard.JustUp(this.keys.BACKWARD)) {
+            //     this.world.stopMoving(mb, currentPlayer)
+            //     this.room.send(0, 'keyup-S')
+            // }
+            // if (Phaser.Input.Keyboard.JustDown(this.keys.RIGHT)) {
+            //     this.world.turnRight(mb, currentPlayer)
+            //     this.room.send(0, 'keydown-D')
+            // }
+            // if (Phaser.Input.Keyboard.JustUp(this.keys.RIGHT)) {
+            //     this.world.stopTurning(mb, currentPlayer)
+            //     this.room.send(0, 'keyup-D')
+            // }
+            // if (Phaser.Input.Keyboard.JustDown(this.keys.LEFT)) {
+            //     this.world.turnLeft(mb, currentPlayer)
+            //     this.room.send(0, 'keydown-A')
+            // }
+            // if (Phaser.Input.Keyboard.JustUp(this.keys.LEFT)) {
+            //     this.world.stopTurning(mb, currentPlayer)
+            //     this.room.send(0, 'keyup-A')
+            // }
+
+
+            //forward/backward
+            if (Phaser.Input.Keyboard.JustDown(this.keys.FORWARD)) {
+                this.room.send(0, KEY_ACTION.JUSTDOWN_FORWARD)
+                currentPlayer.speed = SPEED
+            }
+
+            if (Phaser.Input.Keyboard.JustDown(this.keys.BACKWARD)) {
+                this.room.send(0, KEY_ACTION.JUSTDOWN_BACKWARD)
+                currentPlayer.speed = -SPEED
+            }
+
+            if (Phaser.Input.Keyboard.JustUp(this.keys.FORWARD) && currentPlayer.speed === SPEED) {
+                this.room.send(0, KEY_ACTION.JUSTUP_FORWARD)
+                if (this.keys.BACKWARD.isDown) {
+                    currentPlayer.speed = -SPEED
+                }
+                else {
+                    currentPlayer.speed = 0
+                }
+            }
+            if (Phaser.Input.Keyboard.JustUp(this.keys.BACKWARD) && currentPlayer.speed === -SPEED) {
+                this.room.send(0, KEY_ACTION.JUSTUP_BACKWARD)
+                if (this.keys.FORWARD.isDown) {
+                    currentPlayer.speed = SPEED
+                }
+                else {
+                    currentPlayer.speed = 0
+                }
+            }
+
+            //left/right
+            if (Phaser.Input.Keyboard.JustDown(this.keys.LEFT)) {
+                this.room.send(0, KEY_ACTION.JUSTDOWN_LEFT)
+                currentPlayer.angularVelocity = -TURN_SPEED
+            }
+            if (Phaser.Input.Keyboard.JustDown(this.keys.RIGHT)) {
+                this.room.send(0, KEY_ACTION.JUSTDOWN_RIGHT)
+                currentPlayer.angularVelocity = TURN_SPEED
+            }
+
+            if (Phaser.Input.Keyboard.JustUp(this.keys.LEFT)) {
+                this.room.send(0, KEY_ACTION.JUSTUP_LEFT)
+                if (this.keys.RIGHT.isDown) {
+                    currentPlayer.angularVelocity = TURN_SPEED
+                }
+                else {
+                    currentPlayer.angularVelocity = 0
+                }
+            }
+            if (Phaser.Input.Keyboard.JustUp(this.keys.RIGHT)) {
+                this.room.send(0, KEY_ACTION.JUSTUP_RIGHT)
+                if (this.keys.LEFT.isDown) {
+                    currentPlayer.angularVelocity = -TURN_SPEED
+                }
+                else {
+                    currentPlayer.angularVelocity = 0
+                }
+            }
+
+            const [a] = this.matter.getMatterBodies([this.currentPlayer])
+            this.matter.body.setAngularVelocity(a, currentPlayer.angularVelocity)
+            const velocity = getVelocity(this.currentPlayer.rotation, currentPlayer.speed)
+            this.matter.body.setVelocity(a, velocity)
+
+            if (a.speed <= .01 && a.angularSpeed <= .01) {
+                this.currentPlayer.setStatic(true)
+            }
+            else{
+                this.currentPlayer.setStatic(false)
+            }
+
+        }
+
+        //this.localRef.x = this.currentPlayer.x
+        //this.localRef.y = this.currentPlayer.y
+
+        for (let sessionId in this.playerEntities) {
+            //interpolate all player entities
+            //(except the current player)
+            if (sessionId === this.room.sessionId) {
+                //continue
+            }
+
+            const entity = this.playerEntities[sessionId]
+            const [mb] = this.matter.getMatterBodies([this.currentPlayer])
+
+            //TODO what about going backwards?
+            this.matter.body.setVelocity(mb, getVelocity(mb.angle, mb.speed))
+
+            //lerp
+            const { serverX, serverY } = entity.data.values
+
+            //entity.x = Phaser.Math.Linear(entity.x, serverX, 0.2)
+            //entity.y = Phaser.Math.Linear(entity.y, serverY, 0.2)
+            //this.matter.body.setPosition(mb, {
+            //x: Phaser.Math.Linear(entity.x, serverX, 0.2),
+            //y: Phaser.Math.Linear(entity.y, serverY, 0.2)
+            //}, false)
+        }
+
+    }
+
 
     private onRemove(sessionId: string) {
         const entity = this.playerEntities[sessionId]
@@ -299,8 +351,15 @@ export class MarbleGameScene extends Phaser.Scene {
             const playerSensor = this.matter.bodies.circle(player.position.x, player.position.y, 20, { isSensor: true, label: 'playerCollider' })
             const compoundBody = this.matter.body.create({ parts: [playerCollider, playerSensor] })
 
-            playerSprite = new Phaser.Physics.Matter.Sprite(this.matter.world, player.position.x, player.position.y, 'ship_0001', null, { shape: 'circle' })
-            playerSprite.setExistingBody(compoundBody, true)
+            playerSprite = new Phaser.Physics.Matter.Sprite(this.matter.world,
+                player.position.x, player.position.y,
+                'ship_0001', null, {
+                shape: 'circle',
+                friction: .0,
+                frictionAir: .00,
+                frictionStatic: .0
+            })
+            //playerSprite.setExistingBody(compoundBody, true)
             this.add.existing(playerSprite)
         }
         {
@@ -411,8 +470,25 @@ export class MarbleGameScene extends Phaser.Scene {
             //console.log(this.roomName)
             this.room = await client.joinOrCreate(this.roomName, {})
 
+
             //connection successful!
             connectionStatusText.destroy()
+
+            this.room.state.onChange(() => {
+                //show the turn number somewhere
+                this.registry.set('turnNumber', this.room.state.turnNumber)
+                // console.log(this.room.state.turnNumber)
+            })
+
+            this.room.state.players.onAdd((player, sessionId: string) => {
+                //console.log(this.room.state.players.toJSON())
+                this.onAdd(sessionId, player)
+            })
+
+            //remove local reference when entity is removed from the server
+            this.room.state.players.onRemove((player, sessionId) => {
+                this.onRemove(sessionId)
+            })
 
         } catch (e) {
             //couldn't connect

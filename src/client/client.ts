@@ -1,6 +1,6 @@
 import Phaser from "phaser"
 
-import { WorldListScene } from "./scenes/WorldListScene"
+import { BootScene } from "./scenes/BootScene"
 import { MarbleGameScene } from "./scenes/MarbleGameScene"
 import { HudScene } from "./scenes/HudScene"
 import { TestScene } from "./scenes/TestScene"
@@ -55,14 +55,15 @@ export const config: Phaser.Types.Core.GameConfig = {
 
     pixelArt: true,
     scene: [
-        WorldListScene,
+        BootScene,
         MarbleGameScene,
         HudScene,
         TestScene,
     ],
 }
+console.log(1)
 const game = new Phaser.Game(config)
-
+console.log(2)
 export const respondToVisibility = (element, callback) => {
     // console.log('element',element)
     var options = {

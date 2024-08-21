@@ -1,11 +1,12 @@
 import { Room, Client, updateLobby } from "colyseus"
+import { Bodies, Body, Composite, Engine } from "matter-js"
 import { WorldSchema } from "@/WorldSchema"
-import { InputData } from "@/InputData"
 import { Player } from "@/Player"
 import { Message } from "@/Message"
 import { getMagnitude, getVelocity } from "@/functions"
-import { Bodies, Body, Composite, Engine } from "matter-js"
 import World from "@/World"
+import { KEY_ACTION } from "@/Keys"
+import { SPEED, TURN_SPEED } from "@/SPEED"
 
 export class MarbleGameRoom extends Room<WorldSchema> {
   engine: Engine
@@ -60,7 +61,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     //handle player input
     const player = this.state.players.get(client.sessionId)
     player.messages.push(new Message(input))
-   }
+  }
 
   update(deltaTime: number) {
     const now = new Date().getTime()
@@ -79,11 +80,13 @@ export class MarbleGameRoom extends Room<WorldSchema> {
       // Body.setAngle(entity, normalize(entity.angle))
       player.angle = entity.angle
 
-      player.angularVelocity = entity.angularVelocity
+      // player.angularVelocity = entity.angularVelocity
       player.velocity.x = entity.velocity.x
       player.velocity.y = entity.velocity.y
       // entity.velocity.x = player.velocity.x
       // entity.velocity.y = player.velocity.y
+      player.position.x = entity.position.x
+      player.position.y = entity.position.y
       const m = getMagnitude(player.velocity)
       if (m > 0) {
         // console.log(m)
@@ -100,44 +103,91 @@ export class MarbleGameRoom extends Room<WorldSchema> {
       //   }
       // }
       //TODO what about going backwards?
-      Body.setVelocity(entity, getVelocity(entity.angle, m))
+      // Body.setVelocity(entity, getVelocity(entity.angle, m))
 
-      player.position.x = entity.position.x
-      player.position.y = entity.position.y
+
 
       //dequeue player inputs
-      let input: InputData
+      let input: KEY_ACTION
       while (input = player.inputQueue.shift()) {
         console.log(player.id, input)
 
         switch (input) {
-          case "keydown-W":
-            this.world.moveForward(entity, player)
+          case KEY_ACTION.JUSTDOWN_FORWARD:
+            // this.world.moveForward(entity, player)
+            player.speed = SPEED
+            player.forward = true
             break
-          case "keyup-W":
-            this.world.stopMoving(entity, player)
+          case KEY_ACTION.JUSTUP_FORWARD:
+            // this.world.stopMoving(entity, player)
+            player.forward = false
+            if (player.backward) {
+              player.speed = -SPEED
+            }
+            else {
+              player.speed = 0
+            }
             break
-          case "keydown-S":
-            this.world.moveBackward(entity, player)
+          case KEY_ACTION.JUSTDOWN_BACKWARD:
+            // this.world.moveBackward(entity, player)
+            player.speed = -SPEED
+            player.backward = true
             break
-          case "keyup-S":
-            this.world.stopMoving(entity, player)
+          case KEY_ACTION.JUSTUP_BACKWARD:
+            // this.world.stopMoving(entity, player)
+            player.backward = false
+            if (player.forward) {
+              player.speed = SPEED
+            }
+            else {
+              player.speed = 0
+            }
             break
-          case "keydown-D":
-            this.world.turnRight(entity, player)
+          case KEY_ACTION.JUSTDOWN_RIGHT:
+            console.log('sdsd')
+            // this.world.turnRight(entity, player)
+            player.right = true
+            player.angularVelocity = TURN_SPEED
             break
-          case "keyup-D":
-            this.world.stopTurning(entity, player)
+          case KEY_ACTION.JUSTUP_RIGHT:
+            // this.world.stopTurning(entity, player)
+            player.right = false
+            if (player.left) {
+              player.angularVelocity = -TURN_SPEED
+            }
+            else {
+              player.angularVelocity = 0
+            }
             break
-          case "keydown-A":
-            this.world.turnLeft(entity, player)
+          case KEY_ACTION.JUSTDOWN_LEFT:
+            // this.world.turnLeft(entity, player)
+            player.left = true
+            player.angularVelocity = -TURN_SPEED
             break
-          case "keyup-A":
-            this.world.stopTurning(entity, player)
+          case KEY_ACTION.JUSTUP_LEFT:
+            // this.world.stopTurning(entity, player)
+            player.left = false
+            if (player.right) {
+              player.angularVelocity = TURN_SPEED
+            }
+            else {
+              player.angularVelocity = 0
+            }
             break
         }
       }
-      this.world.setStatic(entity, player)
+      // const [a] = this.matter.getMatterBodies([this.currentPlayer])
+      Body.setAngularVelocity(entity, player.angularVelocity)
+      // console.log(entity.angle)
+      const velocity = getVelocity(entity.angle, player.speed)
+      Body.setVelocity(entity, velocity)
+      if (entity.speed <= .01 && entity.angularSpeed <= .01) {
+        this.world.setStatic(entity, player)
+      }
+      else {
+        Body.setStatic(entity, false)
+
+      }
 
     })
     // if (deltaTime >= 16.667)
@@ -161,9 +211,9 @@ export class MarbleGameRoom extends Room<WorldSchema> {
 
     const circle = Bodies.circle(player.position.x, player.position.y, 16,
       {
-        // friction: 1,
-        frictionAir: 0,
-        // frictionStatic: 10
+        friction: 0,
+        frictionAir: .0,
+        frictionStatic: .0
       })
 
     // circle.restitution = 0

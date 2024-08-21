@@ -1,16 +1,7 @@
+import { BodyType } from "matter"
 import { getVelocity } from "@/functions"
 import { Player } from "@/Player"
-import World from "@/World"
-import { BodyType } from "matter"
-import { Body } from "matter-js"
-
-export interface Keys {
-    FORWARD: Phaser.Input.Keyboard.Key
-    BACKWARD: Phaser.Input.Keyboard.Key
-    LEFT: Phaser.Input.Keyboard.Key
-    RIGHT: Phaser.Input.Keyboard.Key
-    ENTER: Phaser.Input.Keyboard.Key
-}
+import { Keys } from "@/Keys"
 
 export class TestScene extends Phaser.Scene {
     keys: Keys

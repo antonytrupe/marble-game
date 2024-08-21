@@ -1,24 +1,31 @@
 import { Schema, type, ArraySchema } from "@colyseus/schema"
-import { InputData } from "./InputData"
 import { Scene } from "phaser"
 import { Body, World } from "matter-js"
 import { Message } from "./Message"
 import { Vector } from "./Vector"
+import { KEY_ACTION } from "./Keys"
 
 export class Player extends Schema {
-  inputQueue: InputData[] = []
-  body: Body
+
   @type("number") id: number
+  @type('string') name: string
 
   @type(Vector) position: Vector = new Vector()
   @type(Vector) velocity: Vector = new Vector()
-  // @type("number") speed: number
   @type("number") angle: number = 0
   @type("number") angularVelocity: number = 0
-  @type('string') name: string
-
+  @type("number") speed: number = 0
   @type([Message]) messages = new ArraySchema<Message>()
-  @type("number")speed: number=0
+
+  //things the client is authoratative on
+  forward: boolean = false
+  backward: boolean = false
+  right: boolean = false
+  left: boolean = false
+  //input from the client for the server to process
+  inputQueue: KEY_ACTION[] = []
+  //matterjs body, both client and server manage their own instance of this
+  body: Body
 
   constructor(data: { x: number; y: number; scene?: World }) {
     super();

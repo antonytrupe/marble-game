@@ -3,27 +3,30 @@ import { MarbleGameScene } from "./MarbleGameScene"
 import { Client, RoomAvailable } from "colyseus.js"
 import { BACKEND_URL } from "../backend"
 
-export class WorldListScene extends Phaser.Scene {
+export class BootScene extends Phaser.Scene {
 
     worlds: RoomAvailable[] = []
     worldsGroup: Phaser.GameObjects.Group
 
     constructor() {
+        console.log('BootScene constructor')
         super({ key: "selector", active: true })
     }
 
     preload() {
+        console.log('BootScene preload')
         // update menu background color
         this.cameras.main.setBackgroundColor(0xf0f0f0)
         this.worldsGroup = this.add.group()
     }
 
     async create() {
+        console.log('BootScene create')
         // automatically navigate to hash scene if provided
         if (window.location.hash) {
             // console.log('hash')
             const hashParts = window.location.hash.substring(1).split('|')
-            console.log(hashParts)
+            // console.log(hashParts)
             this.runScene(hashParts[0], hashParts[1])
             return
         }
@@ -33,7 +36,7 @@ export class WorldListScene extends Phaser.Scene {
     }
 
     async connect() {
-        // console.log('connect')
+        console.log('BootScene connect')
         const client = new Client(BACKEND_URL)
 
         const lobby = await client.joinOrCreate("lobby")
