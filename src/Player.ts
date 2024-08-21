@@ -34,5 +34,12 @@ export class Player extends Schema {
 
   static preload(scene: Scene) {
     scene.load.image('ship_0001')
+    scene.load.atlas('marble', 'marble/texture.png', 'marble/texture.json')
+    
+  }
+
+  static create(scene: Scene){
+    
+    scene.anims.create({ key: 'marble-roll', frameRate: 10, frames:scene.anims.generateFrameNames('marble', { start: 0, end: 5, prefix: '', suffix: '.png' }), repeat: -1 })
   }
 }

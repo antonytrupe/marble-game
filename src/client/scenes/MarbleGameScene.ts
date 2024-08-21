@@ -25,7 +25,7 @@ export class MarbleGameScene extends Phaser.Scene {
 
     textInput: Phaser.GameObjects.DOMElement
 
-    map: Phaser.Tilemaps.Tilemap;
+    // map: Phaser.Tilemaps.Tilemap;
     chatMode: boolean = false
 
     constructor() {
@@ -43,6 +43,7 @@ export class MarbleGameScene extends Phaser.Scene {
         this.load.image('background')
         this.load.html("input", "input.html")
         Player.preload(this)
+
     }
 
     init({ multiplayer = false, roomName }: { multiplayer: boolean, roomName: string }): void {
@@ -54,6 +55,7 @@ export class MarbleGameScene extends Phaser.Scene {
     async create() {
         console.log('MarbleGameScene create')
 
+        Player.create(this)
         const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
             color: "#000000",
             fontSize: "24px",
@@ -117,7 +119,8 @@ export class MarbleGameScene extends Phaser.Scene {
                 BACKWARD: Phaser.Input.Keyboard.KeyCodes.S,
                 LEFT: Phaser.Input.Keyboard.KeyCodes.A,
                 RIGHT: Phaser.Input.Keyboard.KeyCodes.D,
-                ENTER: Phaser.Input.Keyboard.KeyCodes.ENTER
+                ENTER: Phaser.Input.Keyboard.KeyCodes.ENTER,
+                SLASH: Phaser.Input.Keyboard.KeyCodes.FORWARD_SLASH
             }, false) as Keys
 
         this.input.on('wheel', (pointer: any, gameObjects: any, deltaX: any, deltaY: number, deltaZ: any) => {
@@ -140,18 +143,10 @@ export class MarbleGameScene extends Phaser.Scene {
             //this.get.tileSprite(0, 0, 108, 10, 'scale').setOrigin(0).setScrollFactor(0)
         })
 
-        //this.debugFPS = this.add.text(4, 4, "", { color: "#ff0000", })
-        //this.debugFPS.setScrollFactor(0)
 
         //connect with the room
         await this.connect()
-
-
-
-
         this.scene.launch('HUD')
-
-
         this.cameras.main.setZoom(1)
         //this.cameras.main.useBounds = false
         //this.cameras.main.setBounds(0, 0, 800, 600)
@@ -159,10 +154,6 @@ export class MarbleGameScene extends Phaser.Scene {
 
     update(time: number, delta: number): void {
         // console.log('update')
-        //skip loop if not connected yet.
-
-        // console.log('scrollX', this.cameras.main.scrollX)
-        // console.log('width', this.cameras.main.width)
 
         //this.room.connection.isOpen
         if (!this.currentPlayer) { return }
@@ -198,7 +189,7 @@ export class MarbleGameScene extends Phaser.Scene {
 
         if (!this.chatMode) {
             //forward/backward
-            this.move(currentPlayer, body)
+            this.move(currentPlayer, body, this.currentPlayer)
         }
 
         //this.localRef.x = this.currentPlayer.x
@@ -229,7 +220,7 @@ export class MarbleGameScene extends Phaser.Scene {
         }
     }
 
-    private move(player: Player, body: Body) {
+    private move(player: Player, body: Body, sprite: Phaser.Physics.Matter.Sprite) {
         if (Phaser.Input.Keyboard.JustDown(this.keys.FORWARD)) {
             this.room.send(0, KEY_ACTION.JUSTDOWN_FORWARD)
             player.speed = SPEED
@@ -294,9 +285,13 @@ export class MarbleGameScene extends Phaser.Scene {
 
         if (body.speed <= .01 && body.angularSpeed <= .01) {
             Body.setStatic(body, true)
+            // console.log('stop')
+            sprite.stop()
         }
         else {
             Body.setStatic(body, false)
+            // console.log('roll')
+            sprite.play('marble-roll',true)
         }
     }
 
@@ -319,31 +314,20 @@ export class MarbleGameScene extends Phaser.Scene {
 
             playerSprite = new Phaser.Physics.Matter.Sprite(this.matter.world,
                 player.position.x, player.position.y,
-                'ship_0001', null, {
+                'marble', 1, {
                 shape: 'circle',
                 friction: .0,
                 frictionAir: .00,
                 frictionStatic: .0
             })
-            //playerSprite.setExistingBody(compoundBody, true)
+            player.body=playerSprite.body as unknown as Body
+
+            playerSprite.setExistingBody(compoundBody, true)
             this.add.existing(playerSprite)
-        }
-        {
-            // const playerCollider = Matter.Bodies.circle(player.position.x, player.position.y, 16, { isSensor: false, label: 'playerCollider' })
-            // const playerSensor = Matter.Bodies.circle(player.position.x, player.position.y, 20, { isSensor: true, label: 'playerCollider' })
-            // const compoundBody = Matter.Body.create({ parts: [playerCollider, playerSensor] })
-            // playerSprite = new Phaser.Physics.Matter.Sprite(this.matter.world, player.position.x, player.position.y, 'ship_0001', null, { shape: 'circle' })
-            // playerSprite.setExistingBody(compoundBody)
-            // this.add.existing(playerSprite)
+            // playerSprite.play('marble-roll')
 
         }
-        // playerSprite.setFixedRotation()
-        // playerSprite.setFriction(1)
-        // playerSprite.setFrictionAir(0)
-        // playerSprite.setFrictionStatic(10)
-        // playerSprite.setInteractive()
-        //console.log((entity.body as unknown as Body).id)
-        //entity.setOrigin()
+
         playerSprite.on('pointerdown', () => {
             console.log('click', player.id)
         })
@@ -362,6 +346,7 @@ export class MarbleGameScene extends Phaser.Scene {
         if (sessionId === this.room.sessionId) {
             this.currentPlayer = playerSprite
             this.cameras.main.startFollow(playerSprite, true, .7, .7)
+            // this.currentPlayer.play('marble-roll',true)
         }
 
         player.messages.onAdd((item) => {
