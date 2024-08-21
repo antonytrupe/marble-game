@@ -256,13 +256,9 @@ export class MarbleGameScene extends Phaser.Scene {
 
         if (body.speed <= .01 && body.angularSpeed <= .01) {
             Body.setStatic(body, true)
-            // console.log('stop')
-            sprite.stop()
         }
         else {
             Body.setStatic(body, false)
-            // console.log('roll')
-            sprite.play('marble-roll', true)
         }
     }
 
@@ -275,7 +271,7 @@ export class MarbleGameScene extends Phaser.Scene {
     }
 
     private onAdd(sessionId: string, player: Player) {
-        console.log(sessionId, 'joined marblegame')
+        // console.log(sessionId, 'joined marblegame')
 
         let playerSprite: Phaser.Physics.Matter.Sprite
         {
@@ -285,7 +281,7 @@ export class MarbleGameScene extends Phaser.Scene {
 
             playerSprite = new Phaser.Physics.Matter.Sprite(this.matter.world,
                 player.position.x, player.position.y,
-                'marble', 1, {
+                'marble', 0, {
                 shape: 'circle',
                 friction: .0,
                 frictionAir: .00,
@@ -333,6 +329,13 @@ export class MarbleGameScene extends Phaser.Scene {
                 }
                 this.matter.body.setVelocity(mb, player.velocity)
                 // console.log(mb.velocity)
+
+                if (mb.speed > 0) {
+                    playerSprite.play('marble-roll', true)
+                }
+                else {
+                    playerSprite.stop()
+                }
             }
         })
 
@@ -390,20 +393,15 @@ export class MarbleGameScene extends Phaser.Scene {
         const client = new Client(BACKEND_URL)
 
         try {
-            console.log(this.roomName)
             this.room = await client.joinOrCreate(this.roomName, {})
 
-            console.log(this.room.state)
- 
+
             this.room.state.onChange(() => {
                 //show the turn number somewhere
-                console.log(this.room.state.turnNumber)
                 this.registry.set('turnNumber', this.room.state.turnNumber)
-                console.log(this.registry.get('turnNumber'))
             })
 
             this.room.state.players.onAdd((player, sessionId: string) => {
-                // console.log(this.room.state.players.toJSON())
                 this.onAdd(sessionId, player)
             })
 
