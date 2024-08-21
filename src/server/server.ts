@@ -9,14 +9,14 @@ let latencySimulationMs: number = 0
 
 
 auth.oauth.addProvider('google', {
-    key: process.env.GOOGLE_KEY, // Client ID
-    secret: process.env.GOOGLE_SECRET, // Client Secret
+    key: process.env.GOOGLE_KEY || 'TODO', // Client ID
+    secret: process.env.GOOGLE_SECRET || 'TODO', // Client Secret
     scope: ['email'],//'identify', 
 });
 
 auth.oauth.onCallback(async (data, provider) => {
     const profile = data.profile;
-    console.log('profile',profile)
+    console.log('profile', profile)
     console.log(provider)
     // return await User.upsert({
     //     discord_id: profile.id,

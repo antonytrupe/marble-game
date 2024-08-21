@@ -61,10 +61,10 @@ export const config: Phaser.Types.Core.GameConfig = {
         TestScene,
     ],
 }
-console.log(1)
+
 const game = new Phaser.Game(config)
-console.log(2)
-export const respondToVisibility = (element, callback) => {
+
+export const respondToVisibility = (element: HTMLElement | null, callback: any) => {
     // console.log('element',element)
     var options = {
         root: null,
@@ -75,6 +75,7 @@ export const respondToVisibility = (element, callback) => {
             callback(entry.intersectionRatio > 0)
         });
     }, options)
-
-    observer.observe(element)
+    if (!!element) {
+        observer.observe(element)
+    }
 }

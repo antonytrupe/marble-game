@@ -49,7 +49,7 @@ export class MarbleGameScene extends Phaser.Scene {
     init({ multiplayer = false, roomName }: { multiplayer: boolean, roomName: string }): void {
         console.log('MarbleGameScene init')
         this.roomName = roomName
-        console.log(multiplayer)
+        // console.log(multiplayer)
     }
 
     async create() {
@@ -63,37 +63,6 @@ export class MarbleGameScene extends Phaser.Scene {
             backgroundColor: "white"
         }
 
-
-        const mapData = [];
-
-        // for (let y = 0; y < this.mapHeight; y++)
-        // {
-        //     const row = [];
-
-        //     for (let x = 0; x < this.mapWidth; x++)
-        //     {
-        //         //  Scatter the tiles so we get more mud and less stones
-        //         const tileIndex = Phaser.Math.RND.weightedPick(this.tiles);
-
-        //         row.push(tileIndex);
-        //     }
-
-        //     mapData.push(row);
-        // }
-
-        // this.map = this.make.tilemap({ data: mapData, tileWidth: 512, tileHeight: 512 });
-
-        // const tileset = this.map.addTilesetImage('background');
-        // const layer = this.map.createLayer(0, tileset, 0, 0);
-
-        // try {
-        //     const userdata = await Client.auth.signInWithProvider('discord');
-        //     console.log(userdata);
-
-        // } catch (e) {
-        //     console.error(e.message);
-        // }
-
         this.add.tileSprite(0, 0, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(512, 0, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(1024, 0, 512, 512, 'background')//.setOrigin(0)
@@ -103,17 +72,19 @@ export class MarbleGameScene extends Phaser.Scene {
         this.add.tileSprite(0, 1024, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(512, 1024, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(1024, 1024, 512, 512, 'background')//.setOrigin(0)
-        // this.textInput = this.add.text(0, 0, 'blah blah blah', textStyle)//.setScrollFactor(0)
+
         this.textInput = this.add.dom(100, 100).createFromCache("input")
 
-        respondToVisibility(document.getElementById('text'), (visible) => {
-            // console.log('visible', visible)
-            document.getElementById('text').focus()
-        })
+        // respondToVisibility(document.getElementById('text'), (visible: boolean) => {
+        //     // console.log('visible', visible)
+        //     if (visible) {
+        //         document.getElementById('text')?.focus()
+        //     }
+        // })
 
         this.cameras.main.setRotation(0)
 
-        this.keys = this.input.keyboard.addKeys(
+        this.keys = this.input.keyboard?.addKeys(
             {
                 FORWARD: Phaser.Input.Keyboard.KeyCodes.W,
                 BACKWARD: Phaser.Input.Keyboard.KeyCodes.S,
@@ -161,8 +132,8 @@ export class MarbleGameScene extends Phaser.Scene {
         //this.matter.composite.get(this.matter.world,this.currentPlayer,'body')
         const [body] = this.matter.getMatterBodies([this.currentPlayer]) as unknown as Body[]
         //const mb=this.matter.composite.get(this.matter.world.localWorld as unknown as CompositeType, this.currentPlayer., 'body')
-        const currentPlayer: Player = this.room.state.players.get(this.room.sessionId)
-        //console.log(mb.position)
+        const currentPlayer: Player | undefined = this.room.state.players.get(this.room.sessionId)
+        // console.log(currentPlayer)
         //console.log(mb.angle)
 
         if (Phaser.Input.Keyboard.JustDown(this.keys.ENTER)) {
@@ -187,7 +158,7 @@ export class MarbleGameScene extends Phaser.Scene {
         this.textInput.y = this.currentPlayer.y + this.currentPlayer.height / 2 + this.textInput.height / 2
         // this.textInput.width
 
-        if (!this.chatMode) {
+        if (!this.chatMode && !!currentPlayer) {
             //forward/backward
             this.move(currentPlayer, body, this.currentPlayer)
         }
@@ -291,7 +262,7 @@ export class MarbleGameScene extends Phaser.Scene {
         else {
             Body.setStatic(body, false)
             // console.log('roll')
-            sprite.play('marble-roll',true)
+            sprite.play('marble-roll', true)
         }
     }
 
@@ -304,7 +275,7 @@ export class MarbleGameScene extends Phaser.Scene {
     }
 
     private onAdd(sessionId: string, player: Player) {
-        // console.log(sessionId, 'joined marblegame')
+        console.log(sessionId, 'joined marblegame')
 
         let playerSprite: Phaser.Physics.Matter.Sprite
         {
@@ -320,7 +291,7 @@ export class MarbleGameScene extends Phaser.Scene {
                 frictionAir: .00,
                 frictionStatic: .0
             })
-            player.body=playerSprite.body as unknown as Body
+            player.body = playerSprite.body as unknown as Body
 
             playerSprite.setExistingBody(compoundBody, true)
             this.add.existing(playerSprite)
@@ -409,6 +380,7 @@ export class MarbleGameScene extends Phaser.Scene {
     }
 
     async connect() {
+        console.log('MarbleGameScene connect')
         //add connection status text
         const connectionStatusText = this.add
             .text(0, 0, "Trying to connect with the server...")
@@ -418,21 +390,20 @@ export class MarbleGameScene extends Phaser.Scene {
         const client = new Client(BACKEND_URL)
 
         try {
-            //console.log(this.roomName)
+            console.log(this.roomName)
             this.room = await client.joinOrCreate(this.roomName, {})
 
-
-            //connection successful!
-            connectionStatusText.destroy()
-
+            console.log(this.room.state)
+ 
             this.room.state.onChange(() => {
                 //show the turn number somewhere
+                console.log(this.room.state.turnNumber)
                 this.registry.set('turnNumber', this.room.state.turnNumber)
-                // console.log(this.room.state.turnNumber)
+                console.log(this.registry.get('turnNumber'))
             })
 
             this.room.state.players.onAdd((player, sessionId: string) => {
-                //console.log(this.room.state.players.toJSON())
+                // console.log(this.room.state.players.toJSON())
                 this.onAdd(sessionId, player)
             })
 
@@ -440,6 +411,7 @@ export class MarbleGameScene extends Phaser.Scene {
             this.room.state.players.onRemove((player, sessionId) => {
                 this.onRemove(sessionId)
             })
+            connectionStatusText.destroy()
 
         } catch (e) {
             //couldn't connect

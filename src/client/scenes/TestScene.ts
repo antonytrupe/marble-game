@@ -41,7 +41,7 @@ export class TestScene extends Phaser.Scene {
 
     create() {
         // this.keys = this.input.keyboard.addKeys('W,S,A,D,ENTER', false)
-        this.keys = this.input.keyboard.addKeys(
+        this.keys = this.input.keyboard?.addKeys(
             {
                 FORWARD: Phaser.Input.Keyboard.KeyCodes.W,
                 BACKWARD: Phaser.Input.Keyboard.KeyCodes.S,
@@ -54,7 +54,7 @@ export class TestScene extends Phaser.Scene {
         // const playerSensor = this.matter.bodies.circle(this.player.position.x, this.player.position.y, 20, { isSensor: true, label: 'playerCollider' })
         // const compoundBody = this.matter.body.create({ parts: [playerCollider, playerSensor] })
 
-        this.playerSprite = new Phaser.Physics.Matter.Sprite(this.matter.world, this.player.position.x, this.player.position.y, 'ship_0001', null, { shape: 'circle' })
+        this.playerSprite = new Phaser.Physics.Matter.Sprite(this.matter.world, this.player.position.x, this.player.position.y, 'ship_0001', undefined, { shape: 'circle' })
         // playerSprite.setExistingBody(compoundBody, true)
         this.add.existing(this.playerSprite)
         this.playerSprite.setRotation(0)
@@ -62,7 +62,7 @@ export class TestScene extends Phaser.Scene {
 
 
         //some dummies
-        const a = new Phaser.Physics.Matter.Sprite(this.matter.world, 200, 200, 'ship_0001', null, { shape: 'circle' })
+        const a = new Phaser.Physics.Matter.Sprite(this.matter.world, 200, 200, 'ship_0001', undefined, { shape: 'circle' })
         // a.setFriction(1)//0-1
         // a.setFrictionAir(1)//1-2?
         // a.setFrictionStatic(100)
