@@ -1,7 +1,8 @@
-import { BodyType } from "matter"
 import { getVelocity } from "@/functions"
 import { Player } from "@/Player"
 import { Keys } from "@/Keys"
+import { SPEED, TURN_SPEED } from "@/SPEED"
+import { Body, Composite } from "matter-js"
 
 export class TestScene extends Phaser.Scene {
     keys: Keys
@@ -65,19 +66,16 @@ export class TestScene extends Phaser.Scene {
         // a.setFriction(1)//0-1
         // a.setFrictionAir(1)//1-2?
         // a.setFrictionStatic(100)
-        // a.setStatic(true)
-        this.matter.body.setStatic(a.body as BodyType, true)
+        a.setStatic(true)
+        // this.matter.body.setStatic(a.body as BodyType, true)
+        
         // this.matter.composite.add(this.matter.world,a.body)
         this.add.existing(a)
 
     }
 
     update(time: number, delta: number): void {
-        // const SPEED = 1.7
-        // const TURN_SPEED = 0.04
-        const SPEED = 1.4
-        const TURN_SPEED = .035
-        //40
+     
 
         //forward/backward
         if (Phaser.Input.Keyboard.JustDown(this.keys.FORWARD)) {
@@ -130,9 +128,11 @@ export class TestScene extends Phaser.Scene {
             }
         }
 
-        const [a] = this.matter.getMatterBodies([this.playerSprite])
-        this.matter.body.setAngularVelocity(a, this.player.angularVelocity)
+        const [a] = this.matter.getMatterBodies([this.playerSprite]) as unknown as Body[]
+        // this.matter.body.setAngularVelocity(a, this.player.angularVelocity)
+        Body.setAngularVelocity(a,this.player.angularVelocity)
         const velocity = getVelocity(this.playerSprite.rotation, this.player.speed)
-        this.matter.body.setVelocity(a, velocity)
+        // this.matter.body.setVelocity(a, velocity)
+        Body.setVelocity(a,velocity)
     }
 }

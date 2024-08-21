@@ -1,9 +1,9 @@
-import { Room, Client, updateLobby } from "colyseus"
 import { Bodies, Body, Composite, Engine } from "matter-js"
+import { Room, Client, updateLobby } from "colyseus"
 import { WorldSchema } from "@/WorldSchema"
 import { Player } from "@/Player"
 import { Message } from "@/Message"
-import { getMagnitude, getVelocity } from "@/functions"
+import { getVelocity } from "@/functions"
 import World from "@/World"
 import { KEY_ACTION } from "@/Keys"
 import { SPEED, TURN_SPEED } from "@/SPEED"
@@ -75,125 +75,95 @@ export class MarbleGameRoom extends Room<WorldSchema> {
 
     Engine.update(this.engine, deltaTime / 1)
     this.state.players.forEach(player => {
-      const entity = Composite.get(this.engine.world, player.id, 'body') as Body
-      //normalize some stuff
-      // Body.setAngle(entity, normalize(entity.angle))
-      player.angle = entity.angle
-
-      // player.angularVelocity = entity.angularVelocity
-      player.velocity.x = entity.velocity.x
-      player.velocity.y = entity.velocity.y
-      // entity.velocity.x = player.velocity.x
-      // entity.velocity.y = player.velocity.y
-      player.position.x = entity.position.x
-      player.position.y = entity.position.y
-      const m = getMagnitude(player.velocity)
-      if (m > 0) {
-        // console.log(m)
-        // console.log(entity.velocity)
-
-      }
-      // if (entity.speed != 0) {
-      //   const velocity_angle = getAngle(entity.velocity)
-      //    // console.log('a', a)
-      //   // console.log('b', b)
-      //   if (Math.abs(velocity_angle - entity.angle) >= 3) {
-      //     // console.log('going backwards')
-      //     player.speed *= -1
-      //   }
-      // }
-      //TODO what about going backwards?
-      // Body.setVelocity(entity, getVelocity(entity.angle, m))
-
-
+      const body = Composite.get(this.engine.world, player.id, 'body') as Body
+      //TODO maybe don't do this here
+      player.angle = body.angle
+      player.velocity.x = body.velocity.x
+      player.velocity.y = body.velocity.y
+      player.position.x = body.position.x
+      player.position.y = body.position.y
 
       //dequeue player inputs
-      let input: KEY_ACTION
-      while (input = player.inputQueue.shift()) {
-        console.log(player.id, input)
-
-        switch (input) {
-          case KEY_ACTION.JUSTDOWN_FORWARD:
-            // this.world.moveForward(entity, player)
-            player.speed = SPEED
-            player.forward = true
-            break
-          case KEY_ACTION.JUSTUP_FORWARD:
-            // this.world.stopMoving(entity, player)
-            player.forward = false
-            if (player.backward) {
-              player.speed = -SPEED
-            }
-            else {
-              player.speed = 0
-            }
-            break
-          case KEY_ACTION.JUSTDOWN_BACKWARD:
-            // this.world.moveBackward(entity, player)
-            player.speed = -SPEED
-            player.backward = true
-            break
-          case KEY_ACTION.JUSTUP_BACKWARD:
-            // this.world.stopMoving(entity, player)
-            player.backward = false
-            if (player.forward) {
-              player.speed = SPEED
-            }
-            else {
-              player.speed = 0
-            }
-            break
-          case KEY_ACTION.JUSTDOWN_RIGHT:
-            console.log('sdsd')
-            // this.world.turnRight(entity, player)
-            player.right = true
-            player.angularVelocity = TURN_SPEED
-            break
-          case KEY_ACTION.JUSTUP_RIGHT:
-            // this.world.stopTurning(entity, player)
-            player.right = false
-            if (player.left) {
-              player.angularVelocity = -TURN_SPEED
-            }
-            else {
-              player.angularVelocity = 0
-            }
-            break
-          case KEY_ACTION.JUSTDOWN_LEFT:
-            // this.world.turnLeft(entity, player)
-            player.left = true
-            player.angularVelocity = -TURN_SPEED
-            break
-          case KEY_ACTION.JUSTUP_LEFT:
-            // this.world.stopTurning(entity, player)
-            player.left = false
-            if (player.right) {
-              player.angularVelocity = TURN_SPEED
-            }
-            else {
-              player.angularVelocity = 0
-            }
-            break
-        }
-      }
-      // const [a] = this.matter.getMatterBodies([this.currentPlayer])
-      Body.setAngularVelocity(entity, player.angularVelocity)
-      // console.log(entity.angle)
-      const velocity = getVelocity(entity.angle, player.speed)
-      Body.setVelocity(entity, velocity)
-      if (entity.speed <= .01 && entity.angularSpeed <= .01) {
-        this.world.setStatic(entity, player)
-      }
-      else {
-        Body.setStatic(entity, false)
-
-      }
+      this.move(player, body)
 
     })
     // if (deltaTime >= 16.667)
     //   console.log(deltaTime)
 
     // Engine.update(this.engine, deltaTime / 2)
+  }
+
+  private move(player: Player, body: Body) {
+    let input: KEY_ACTION
+    while (input = player.inputQueue.shift()) {
+      console.log(player.id, input)
+
+      switch (input) {
+        case KEY_ACTION.JUSTDOWN_FORWARD:
+          player.speed = SPEED
+          player.forward = true
+          break
+        case KEY_ACTION.JUSTUP_FORWARD:
+          player.forward = false
+          if (player.backward) {
+            player.speed = -SPEED
+          }
+          else {
+            player.speed = 0
+          }
+          break
+        case KEY_ACTION.JUSTDOWN_BACKWARD:
+          player.speed = -SPEED
+          player.backward = true
+          break
+        case KEY_ACTION.JUSTUP_BACKWARD:
+          player.backward = false
+          if (player.forward) {
+            player.speed = SPEED
+          }
+          else {
+            player.speed = 0
+          }
+          break
+        case KEY_ACTION.JUSTDOWN_RIGHT:
+          player.right = true
+          player.angularVelocity = TURN_SPEED
+          break
+        case KEY_ACTION.JUSTUP_RIGHT:
+          player.right = false
+          if (player.left) {
+            player.angularVelocity = -TURN_SPEED
+          }
+          else {
+            player.angularVelocity = 0
+          }
+          break
+        case KEY_ACTION.JUSTDOWN_LEFT:
+          player.left = true
+          player.angularVelocity = -TURN_SPEED
+          break
+        case KEY_ACTION.JUSTUP_LEFT:
+          player.left = false
+          if (player.right) {
+            player.angularVelocity = TURN_SPEED
+          }
+          else {
+            player.angularVelocity = 0
+          }
+          break
+      }
+    }
+
+    Body.setAngularVelocity(body, player.angularVelocity)
+    const velocity = getVelocity(body.angle, player.speed)
+    Body.setVelocity(body, velocity)
+    if (body.speed <= .01 && body.angularSpeed <= .01) {
+      this.world.setStatic(body, player)
+    }
+    else {
+      Body.setStatic(body, false)
+
+    }
   }
 
   onJoin(client: Client, options: any) {
