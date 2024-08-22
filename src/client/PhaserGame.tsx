@@ -1,3 +1,4 @@
+import styles from './styles.module.css'
 import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
 import StartGame from '@/client/main';
 import { EventBus } from '@/client/EventBus';
@@ -22,7 +23,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
         if (game.current === null)
         {
 
-            game.current = StartGame("game-container");
+            game.current = StartGame("phaser-container");
 
             if (typeof ref === 'function')
             {
@@ -33,6 +34,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
             }
 
         }
+        game.current.canvas.width=1000
 
         return () =>
         {
@@ -80,7 +82,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
     }, [currentActiveScene, ref]);
 
     return (
-        <div id="game-container"></div>
+        <div id="phaser-container" className={styles.phaserContainer}></div>
     );
 
 });

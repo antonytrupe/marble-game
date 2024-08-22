@@ -26,15 +26,21 @@
     //  "target": "es2016",
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
-     "forceConsistentCasingInFileNames": true,
-     "jsxImportSource": "react",
+    "forceConsistentCasingInFileNames": true,
+    "jsxImportSource": "react",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "dist/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
-  ],
+  ]
 }

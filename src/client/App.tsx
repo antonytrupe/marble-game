@@ -1,3 +1,4 @@
+"use client"
 import { useRef } from 'react';
 import { IRefPhaserGame, PhaserGame } from './PhaserGame';
 import { MainMenu } from './scenes/MainMenu';
@@ -22,11 +23,7 @@ export default () => {
     const currentScene = (scene: Phaser.Scene) => {
     }
 
-    return (
-        <div id="app">
-            <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
-        </div>
+    return (         
+            <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />       
     )
 }
-
-// export default App
