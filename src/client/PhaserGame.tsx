@@ -11,7 +11,7 @@ export interface IRefPhaserGame {
 export const PhaserGame = forwardRef<IRefPhaserGame>(function PhaserGame({ }, ref) {
     const game = useRef<Game | null>(null!);
 
-    console.log(ref)
+    // console.log(ref)
 
     useLayoutEffect(() => {
         if (game.current === null) {
