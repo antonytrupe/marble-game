@@ -1,12 +1,11 @@
-import Phaser from "phaser"
-import { MarbleGameScene } from "./MarbleGameScene"
+import { GameObjects, Scene, Types } from "phaser"
 import { Client, RoomAvailable } from "colyseus.js"
 import { BACKEND_URL } from "../backend"
 
-export class BootScene extends Phaser.Scene {
+export class BootScene extends Scene {
 
     worlds: RoomAvailable[] = []
-    worldsGroup: Phaser.GameObjects.Group
+    worldsGroup: GameObjects.Group
 
     constructor() {
         console.log('BootScene constructor')
@@ -67,7 +66,7 @@ export class BootScene extends Phaser.Scene {
 
         this.worldsGroup.clear(true)
 
-        const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+        const textStyle: Types.GameObjects.Text.TextStyle = {
             color: "#ff0000",
             fontSize: "32px",
             fontFamily: "Arial"

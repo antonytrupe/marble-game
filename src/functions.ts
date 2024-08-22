@@ -9,11 +9,11 @@ export const getVelocity = (angle: number, speed: number) => {
   return { x: speed * Math.sin(angle), y: -speed * Math.cos(angle) }
 }
 
-export const getAngle = ({ x, y }) => {
+export const getAngle = ({ x, y }: { x: number, y: number }) => {
   return normalize(Math.atan2(y, x) - Math.PI * 3 / 2)
 }
 
-export const getMagnitude = ({ x, y }) => {
+export const getMagnitude = ({ x, y }:{ x:number, y:number }) => {
   return Math.sqrt(x * x + y * y)
 }
 

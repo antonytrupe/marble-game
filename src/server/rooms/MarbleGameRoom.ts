@@ -42,10 +42,10 @@ export class MarbleGameRoom extends Room<WorldSchema> {
       const player = this.state.players.get(client.sessionId)
 
       //enqueue input to user input buffer.
-      player.inputQueue.push(input)
+      player?.inputQueue.push(input)
     })
 
-    this.onMessage('chat', (client, input) => {
+    this.onMessage('chat', (client: Client, input) => {
       this.chat(client, input)
 
       //enqueue input to user input buffer.
@@ -56,11 +56,11 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     this.setSimulationInterval((deltaTime) => this.update(deltaTime))
   }
 
-  private chat(client, input: string) {
+  private chat(client: Client, input: string) {
     console.log(client.sessionId, input)
     //handle player input
     const player = this.state.players.get(client.sessionId)
-    player.messages.push(new Message(input))
+    player?.messages.push(new Message(input))
   }
 
   update(deltaTime: number) {
@@ -94,7 +94,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
   }
 
   private move(player: Player, body: Body) {
-    let input: KEY_ACTION
+    let input: KEY_ACTION | undefined
     while (input = player.inputQueue.shift()) {
       console.log(player.id, input)
 
@@ -194,7 +194,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     Composite.add(this.engine.world, [circle])
 
     this.state.players.set(client.sessionId, player)
-    // console.log('player count', this.state.players.size)
+    //  console.log('player count', this.state.players.size)
     // console.log('body count', Composite.allBodies(this.engine.world).length)
     // console.log(player.toJSON())
   }

@@ -1,15 +1,16 @@
 import { Message } from "@/Message"
 import { Player } from "@/Player"
+import { GameObjects, Scene, Types } from "phaser"
 
-export default class ChatBubble extends Phaser.GameObjects.Text {
+export default class ChatBubble extends GameObjects.Text {
     player: Player
     startTime
 
     constructor(data: {
-        scene: Phaser.Scene,
+        scene: Scene,
         message: Message,
 
-        style?: Phaser.Types.GameObjects.Text.TextStyle,
+        style?: Types.GameObjects.Text.TextStyle,
 
         player: Player
     }) {

@@ -2,12 +2,13 @@ import { getVelocity } from "@/functions"
 import { Player } from "@/Player"
 import { Keys } from "@/Keys"
 import { SPEED, TURN_SPEED } from "@/SPEED"
-import { Body, Composite } from "matter-js"
+import { Body } from "matter-js"
+import { Input, Physics, Scene } from "phaser"
 
-export class TestScene extends Phaser.Scene {
+export class TestScene extends Scene {
     keys: Keys
     player: Player = new Player({ x: 200, y: 250 })
-    playerSprite: Phaser.Physics.Matter.Sprite
+    playerSprite: Physics.Matter.Sprite
 
     constructor() {
         // console.log('test constructor')
@@ -41,12 +42,12 @@ export class TestScene extends Phaser.Scene {
 
     create() {
         // this.keys = this.input.keyboard.addKeys('W,S,A,D,ENTER', false)
-        this.keys = this.input.keyboard.addKeys(
+        this.keys = this.input.keyboard?.addKeys(
             {
-                FORWARD: Phaser.Input.Keyboard.KeyCodes.W,
-                BACKWARD: Phaser.Input.Keyboard.KeyCodes.S,
-                LEFT: Phaser.Input.Keyboard.KeyCodes.A,
-                RIGHT: Phaser.Input.Keyboard.KeyCodes.D,
+                FORWARD: Input.Keyboard.KeyCodes.W,
+                BACKWARD: Input.Keyboard.KeyCodes.S,
+                LEFT: Input.Keyboard.KeyCodes.A,
+                RIGHT: Input.Keyboard.KeyCodes.D,
             }) as Keys
 
         console.log(this.keys)
@@ -54,7 +55,7 @@ export class TestScene extends Phaser.Scene {
         // const playerSensor = this.matter.bodies.circle(this.player.position.x, this.player.position.y, 20, { isSensor: true, label: 'playerCollider' })
         // const compoundBody = this.matter.body.create({ parts: [playerCollider, playerSensor] })
 
-        this.playerSprite = new Phaser.Physics.Matter.Sprite(this.matter.world, this.player.position.x, this.player.position.y, 'ship_0001', null, { shape: 'circle' })
+        this.playerSprite = new Physics.Matter.Sprite(this.matter.world, this.player.position.x, this.player.position.y, 'ship_0001', undefined, { shape: 'circle' })
         // playerSprite.setExistingBody(compoundBody, true)
         this.add.existing(this.playerSprite)
         this.playerSprite.setRotation(0)
@@ -62,7 +63,7 @@ export class TestScene extends Phaser.Scene {
 
 
         //some dummies
-        const a = new Phaser.Physics.Matter.Sprite(this.matter.world, 200, 200, 'ship_0001', null, { shape: 'circle' })
+        const a = new Physics.Matter.Sprite(this.matter.world, 200, 200, 'ship_0001', undefined, { shape: 'circle' })
         // a.setFriction(1)//0-1
         // a.setFrictionAir(1)//1-2?
         // a.setFrictionStatic(100)
@@ -78,15 +79,15 @@ export class TestScene extends Phaser.Scene {
      
 
         //forward/backward
-        if (Phaser.Input.Keyboard.JustDown(this.keys.FORWARD)) {
+        if (Input.Keyboard.JustDown(this.keys.FORWARD)) {
             this.player.speed = SPEED
         }
 
-        if (Phaser.Input.Keyboard.JustDown(this.keys.BACKWARD)) {
+        if (Input.Keyboard.JustDown(this.keys.BACKWARD)) {
             this.player.speed = -SPEED
         }
 
-        if (Phaser.Input.Keyboard.JustUp(this.keys.FORWARD) && this.player.speed === SPEED) {
+        if (Input.Keyboard.JustUp(this.keys.FORWARD) && this.player.speed === SPEED) {
             if (this.keys.BACKWARD.isDown) {
                 this.player.speed = -SPEED
             }
@@ -94,7 +95,7 @@ export class TestScene extends Phaser.Scene {
                 this.player.speed = 0
             }
         }
-        if (Phaser.Input.Keyboard.JustUp(this.keys.BACKWARD) && this.player.speed === -SPEED) {
+        if (Input.Keyboard.JustUp(this.keys.BACKWARD) && this.player.speed === -SPEED) {
             if (this.keys.FORWARD.isDown) {
                 this.player.speed = SPEED
             }
@@ -104,14 +105,14 @@ export class TestScene extends Phaser.Scene {
         }
 
         //left/right
-        if (Phaser.Input.Keyboard.JustDown(this.keys.LEFT)) {
+        if (Input.Keyboard.JustDown(this.keys.LEFT)) {
             this.player.angularVelocity = -TURN_SPEED
         }
-        if (Phaser.Input.Keyboard.JustDown(this.keys.RIGHT)) {
+        if (Input.Keyboard.JustDown(this.keys.RIGHT)) {
             this.player.angularVelocity = TURN_SPEED
         }
 
-        if (Phaser.Input.Keyboard.JustUp(this.keys.LEFT)) {
+        if (Input.Keyboard.JustUp(this.keys.LEFT)) {
             if (this.keys.RIGHT.isDown) {
                 this.player.angularVelocity = TURN_SPEED
             }
@@ -119,7 +120,7 @@ export class TestScene extends Phaser.Scene {
                 this.player.angularVelocity = 0
             }
         }
-        if (Phaser.Input.Keyboard.JustUp(this.keys.RIGHT)) {
+        if (Input.Keyboard.JustUp(this.keys.RIGHT)) {
             if (this.keys.LEFT.isDown) {
                 this.player.angularVelocity = -TURN_SPEED
             }
