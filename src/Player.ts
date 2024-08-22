@@ -40,6 +40,6 @@ export class Player extends Schema {
 
   static create(scene: Scene){
     
-    scene.anims.create({ key: 'marble-roll', frameRate: 10, frames:scene.anims.generateFrameNames('marble', { start: 0, end: 5, prefix: '', suffix: '.png' }), repeat: -1 })
+    scene.anims.create({ key: 'marble-roll', frameRate: 10, frames:scene.anims.generateFrameNames('marble', { start: 0, end: 11, prefix: '', suffix: '.png' }), repeat: -1 })
   }
 }
