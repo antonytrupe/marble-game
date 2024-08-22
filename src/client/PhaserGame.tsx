@@ -1,8 +1,7 @@
-import styles from './styles.module.css'
-import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
-import StartGame from '@/client/main';
-import { EventBus } from '@/client/EventBus';
+import { forwardRef, useLayoutEffect, useRef } from 'react';
 import { Game, Scene } from 'phaser';
+import StartGame from '@/client/main';
+import styles from '@/client/styles.module.css'
 
 export interface IRefPhaserGame {
     game: Game | null;

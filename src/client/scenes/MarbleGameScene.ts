@@ -1,16 +1,16 @@
 import { Body } from "matter-js"
 import { Room, Client } from "colyseus.js"
 import{ GameObjects, Input, Physics, Scene, Types} from "phaser"
-import { BACKEND_URL } from "@/client/backend"
 import { WorldSchema } from "@/WorldSchema"
 import { Player } from "@/Player"
 import { Message } from "@/Message"
 import { getVelocity } from "@/functions"
 import World from "@/World"
-import { respondToVisibility } from "../respondToVisibility"
+import { respondToVisibility } from "@/client/respondToVisibility"
 import ChatBubble from "@/client/ChatBubble"
 import { KEY_ACTION, Keys } from "@/Keys"
 import { SPEED, TURN_SPEED } from "@/SPEED";
+import { BACKEND_URL } from "@/client/BACKEND_URL"
 
 export class MarbleGameScene extends Scene {
 

@@ -1,7 +1,7 @@
 "use client"
 import { useRef } from 'react';
-import { IRefPhaserGame, PhaserGame } from './PhaserGame';
- import { Scene } from 'phaser';
+import { Scene } from 'phaser';
+import { IRefPhaserGame, PhaserGame } from '@/client/PhaserGame';
 
 export default () => {
 

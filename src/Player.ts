@@ -1,9 +1,9 @@
 import { Schema, type, ArraySchema } from "@colyseus/schema"
 import { Scene } from "phaser"
 import { Body, World } from "matter-js"
-import { Message } from "./Message"
-import { Vector } from "./Vector"
-import { KEY_ACTION } from "./Keys"
+import { Message } from "@/Message"
+import { Vector } from "@/Vector"
+import { KEY_ACTION } from "@/Keys"
 
 export class Player extends Schema {
 

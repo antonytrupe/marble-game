@@ -1,9 +1,9 @@
+import { Body } from "matter-js"
+import { Input, Physics, Scene } from "phaser"
 import { getVelocity } from "@/functions"
 import { Player } from "@/Player"
 import { Keys } from "@/Keys"
 import { SPEED, TURN_SPEED } from "@/SPEED"
-import { Body } from "matter-js"
-import { Input, Physics, Scene } from "phaser"
 
 export class TestScene extends Scene {
     keys: Keys

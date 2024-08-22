@@ -1,8 +1,8 @@
 import { LobbyRoom, matchMaker, Server } from "colyseus"
 import config, { listen } from "@colyseus/tools"
-import { MarbleGameRoom } from "./rooms/MarbleGameRoom"
 import { auth } from "@colyseus/auth"
 import { monitor } from "@colyseus/monitor"
+import { MarbleGameRoom } from "@/server/rooms/MarbleGameRoom"
 
 let gameServerRef: Server
 let latencySimulationMs: number = 0

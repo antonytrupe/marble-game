@@ -1,10 +1,10 @@
-import { Game as MainGame } from './scenes/Game';
 import { AUTO, Game, Scale, Types } from 'phaser';
-import { Preloader } from './scenes/Preloader';
-import { BootScene } from './scenes/BootScene';
-import { MarbleGameScene } from './scenes/MarbleGameScene';
-import { HudScene } from './scenes/HudScene';
-import { TestScene } from './scenes/TestScene';
+import { Game as MainGame } from '@/client/scenes/Game';
+import { Preloader } from '@/client/scenes/Preloader';
+import { BootScene } from '@/client/scenes/BootScene';
+import { MarbleGameScene } from '@/client/scenes/MarbleGameScene';
+import { HudScene } from '@/client/scenes/HudScene';
+import { TestScene } from '@/client/scenes/TestScene';
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig

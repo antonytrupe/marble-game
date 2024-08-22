@@ -1,7 +1,6 @@
 import { Body, } from "matter-js";
-import { getVelocity } from "./functions";
-import { Player, } from "./Player";
-import { Vector } from "./Vector";
+import { Player, } from "@/Player";
+import { Vector } from "@/Vector";
 
 export default class World {
 

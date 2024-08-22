@@ -1,6 +1,6 @@
+import { GameObjects, Scene, Types } from "phaser"
 import { Message } from "@/Message"
 import { Player } from "@/Player"
-import { GameObjects, Scene, Types } from "phaser"
 
 export default class ChatBubble extends GameObjects.Text {
     player: Player

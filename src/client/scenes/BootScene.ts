@@ -1,6 +1,6 @@
-import { GameObjects, Scene, Types } from "phaser"
 import { Client, RoomAvailable } from "colyseus.js"
-import { BACKEND_URL } from "../backend"
+import { GameObjects, Scene, Types } from "phaser"
+import { BACKEND_URL } from "@/client/BACKEND_URL"
 
 export class BootScene extends Scene {
 
