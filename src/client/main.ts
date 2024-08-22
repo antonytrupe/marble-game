@@ -1,6 +1,4 @@
-import { GameOver } from './scenes/GameOver';
 import { Game as MainGame } from './scenes/Game';
-import { MainMenu } from './scenes/MainMenu';
 import { AUTO, Game, Scale, Types } from 'phaser';
 import { Preloader } from './scenes/Preloader';
 import { BootScene } from './scenes/BootScene';
@@ -23,9 +21,9 @@ const config: Types.Core.GameConfig = {
     scene: [
         BootScene,
         Preloader,
-        MainMenu,
+        // MainMenu,
         MainGame,
-        GameOver,
+        // GameOver,
         MarbleGameScene,
         HudScene,
         TestScene,
