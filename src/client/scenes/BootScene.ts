@@ -1,4 +1,4 @@
-import Phaser, { GameObjects, Scene } from "phaser"
+import { GameObjects, Scene, Types } from "phaser"
 import { Client, RoomAvailable } from "colyseus.js"
 import { BACKEND_URL } from "../backend"
 
@@ -66,7 +66,7 @@ export class BootScene extends Scene {
 
         this.worldsGroup.clear(true)
 
-        const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+        const textStyle: Types.GameObjects.Text.TextStyle = {
             color: "#ff0000",
             fontSize: "32px",
             fontFamily: "Arial"

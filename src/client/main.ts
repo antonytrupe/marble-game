@@ -1,9 +1,8 @@
- import { GameOver } from './scenes/GameOver';
+import { GameOver } from './scenes/GameOver';
 import { Game as MainGame } from './scenes/Game';
 import { MainMenu } from './scenes/MainMenu';
-import { AUTO, Game } from 'phaser';
+import { AUTO, Game, Scale, Types } from 'phaser';
 import { Preloader } from './scenes/Preloader';
-import { Boot } from './scenes/Boot';
 import { BootScene } from './scenes/BootScene';
 import { MarbleGameScene } from './scenes/MarbleGameScene';
 import { HudScene } from './scenes/HudScene';
@@ -11,12 +10,15 @@ import { TestScene } from './scenes/TestScene';
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
-const config: Phaser.Types.Core.GameConfig = {
+const config: Types.Core.GameConfig = {
     type: AUTO,
     width: 1024,
     height: 768,
-    scale: { mode: Phaser.Scale.RESIZE },
+    scale: { mode: Scale.RESIZE },
     parent: 'phaser-container',
+    dom: {
+        createContainer: true
+    },
     backgroundColor: '#028af8',
     scene: [
         BootScene,

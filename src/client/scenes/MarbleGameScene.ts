@@ -1,31 +1,30 @@
 import { Body } from "matter-js"
 import { Room, Client } from "colyseus.js"
-import Phaser from "phaser"
+import{ GameObjects, Input, Physics, Scene, Types} from "phaser"
 import { BACKEND_URL } from "@/client/backend"
 import { WorldSchema } from "@/WorldSchema"
 import { Player } from "@/Player"
 import { Message } from "@/Message"
 import { getVelocity } from "@/functions"
 import World from "@/World"
-import { respondToVisibility } from "@/client/client"
+import { respondToVisibility } from "../respondToVisibility"
 import ChatBubble from "@/client/ChatBubble"
 import { KEY_ACTION, Keys } from "@/Keys"
 import { SPEED, TURN_SPEED } from "@/SPEED";
 
-export class MarbleGameScene extends Phaser.Scene {
+export class MarbleGameScene extends Scene {
 
     room: Room<WorldSchema>
 
-    currentPlayer: Phaser.Physics.Matter.Sprite
-    playerEntities: { [sessionId: string]: Phaser.Physics.Matter.Image } = {}
+    currentPlayer: Physics.Matter.Sprite
+    playerEntities: { [sessionId: string]: Physics.Matter.Image } = {}
 
     keys: Keys
     world: World = new World()
     roomName: string
 
-    textInput: Phaser.GameObjects.DOMElement
+    textInput: GameObjects.DOMElement
 
-    // map: Phaser.Tilemaps.Tilemap;
     chatMode: boolean = false
 
     constructor() {
@@ -56,7 +55,7 @@ export class MarbleGameScene extends Phaser.Scene {
         console.log('MarbleGameScene create')
 
         Player.create(this)
-        const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+        const textStyle: Types.GameObjects.Text.TextStyle = {
             color: "#000000",
             fontSize: "24px",
             fontFamily: "Arial",
@@ -73,25 +72,25 @@ export class MarbleGameScene extends Phaser.Scene {
         this.add.tileSprite(512, 1024, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(1024, 1024, 512, 512, 'background')//.setOrigin(0)
 
-        this.textInput = this.add.dom(100, 100).createFromCache("input")
+        this.textInput = this.add.dom(100, 100).createFromCache("input").setVisible(false)
 
-        // respondToVisibility(document.getElementById('text'), (visible: boolean) => {
-        //     // console.log('visible', visible)
-        //     if (visible) {
-        //         document.getElementById('text')?.focus()
-        //     }
-        // })
+        respondToVisibility(document.getElementById('text'), (visible: boolean) => {
+            // console.log('visible', visible)
+            if (visible) {
+                document.getElementById('text')?.focus()
+            }
+        })
 
         this.cameras.main.setRotation(0)
 
         this.keys = this.input.keyboard?.addKeys(
             {
-                FORWARD: Phaser.Input.Keyboard.KeyCodes.W,
-                BACKWARD: Phaser.Input.Keyboard.KeyCodes.S,
-                LEFT: Phaser.Input.Keyboard.KeyCodes.A,
-                RIGHT: Phaser.Input.Keyboard.KeyCodes.D,
-                ENTER: Phaser.Input.Keyboard.KeyCodes.ENTER,
-                SLASH: Phaser.Input.Keyboard.KeyCodes.FORWARD_SLASH
+                FORWARD: Input.Keyboard.KeyCodes.W,
+                BACKWARD: Input.Keyboard.KeyCodes.S,
+                LEFT: Input.Keyboard.KeyCodes.A,
+                RIGHT: Input.Keyboard.KeyCodes.D,
+                ENTER: Input.Keyboard.KeyCodes.ENTER,
+                SLASH: Input.Keyboard.KeyCodes.FORWARD_SLASH
             }, false) as Keys
 
         this.input.on('wheel', (pointer: any, gameObjects: any, deltaX: any, deltaY: number, deltaZ: any) => {
@@ -191,18 +190,18 @@ export class MarbleGameScene extends Phaser.Scene {
         }
     }
 
-    private move(player: Player, body: Body, sprite: Phaser.Physics.Matter.Sprite) {
-        if (Phaser.Input.Keyboard.JustDown(this.keys.FORWARD)) {
+    private move(player: Player, body: Body, sprite: Physics.Matter.Sprite) {
+        if (Input.Keyboard.JustDown(this.keys.FORWARD)) {
             this.room.send(0, KEY_ACTION.JUSTDOWN_FORWARD)
             player.speed = SPEED
         }
 
-        if (Phaser.Input.Keyboard.JustDown(this.keys.BACKWARD)) {
+        if (Input.Keyboard.JustDown(this.keys.BACKWARD)) {
             this.room.send(0, KEY_ACTION.JUSTDOWN_BACKWARD)
             player.speed = -SPEED
         }
 
-        if (Phaser.Input.Keyboard.JustUp(this.keys.FORWARD) && player.speed === SPEED) {
+        if (Input.Keyboard.JustUp(this.keys.FORWARD) && player.speed === SPEED) {
             this.room.send(0, KEY_ACTION.JUSTUP_FORWARD)
             if (this.keys.BACKWARD.isDown) {
                 player.speed = -SPEED
@@ -211,7 +210,7 @@ export class MarbleGameScene extends Phaser.Scene {
                 player.speed = 0
             }
         }
-        if (Phaser.Input.Keyboard.JustUp(this.keys.BACKWARD) && player.speed === -SPEED) {
+        if (Input.Keyboard.JustUp(this.keys.BACKWARD) && player.speed === -SPEED) {
             this.room.send(0, KEY_ACTION.JUSTUP_BACKWARD)
             if (this.keys.FORWARD.isDown) {
                 player.speed = SPEED
@@ -222,16 +221,16 @@ export class MarbleGameScene extends Phaser.Scene {
         }
 
         //left/right
-        if (Phaser.Input.Keyboard.JustDown(this.keys.LEFT)) {
+        if (Input.Keyboard.JustDown(this.keys.LEFT)) {
             this.room.send(0, KEY_ACTION.JUSTDOWN_LEFT)
             player.angularVelocity = -TURN_SPEED
         }
-        if (Phaser.Input.Keyboard.JustDown(this.keys.RIGHT)) {
+        if (Input.Keyboard.JustDown(this.keys.RIGHT)) {
             this.room.send(0, KEY_ACTION.JUSTDOWN_RIGHT)
             player.angularVelocity = TURN_SPEED
         }
 
-        if (Phaser.Input.Keyboard.JustUp(this.keys.LEFT)) {
+        if (Input.Keyboard.JustUp(this.keys.LEFT)) {
             this.room.send(0, KEY_ACTION.JUSTUP_LEFT)
             if (this.keys.RIGHT.isDown) {
                 player.angularVelocity = TURN_SPEED
@@ -240,7 +239,7 @@ export class MarbleGameScene extends Phaser.Scene {
                 player.angularVelocity = 0
             }
         }
-        if (Phaser.Input.Keyboard.JustUp(this.keys.RIGHT)) {
+        if (Input.Keyboard.JustUp(this.keys.RIGHT)) {
             this.room.send(0, KEY_ACTION.JUSTUP_RIGHT)
             if (this.keys.LEFT.isDown) {
                 player.angularVelocity = -TURN_SPEED
@@ -273,13 +272,13 @@ export class MarbleGameScene extends Phaser.Scene {
     private onAdd(sessionId: string, player: Player) {
         // console.log(sessionId, 'joined marblegame')
 
-        let playerSprite: Phaser.Physics.Matter.Sprite
+        let playerSprite: Physics.Matter.Sprite
         {
             const playerCollider = this.matter.bodies.circle(player.position.x, player.position.y, 16, { isSensor: false, label: 'playerCollider' })
             const playerSensor = this.matter.bodies.circle(player.position.x, player.position.y, 20, { isSensor: true, label: 'playerCollider' })
             const compoundBody = this.matter.body.create({ parts: [playerCollider, playerSensor] })
 
-            playerSprite = new Phaser.Physics.Matter.Sprite(this.matter.world,
+            playerSprite = new Physics.Matter.Sprite(this.matter.world,
                 player.position.x, player.position.y,
                 'marble', 0, {
                 shape: 'circle',
@@ -332,9 +331,12 @@ export class MarbleGameScene extends Phaser.Scene {
 
                 if (mb.speed > 0) {
                     playerSprite.play('marble-roll', true)
+                    // playerSprite.anims.resume()
+                    // playerSprite.anims.hasStarted
                 }
                 else {
-                    playerSprite.stop()
+                    playerSprite.anims.pause()
+                    // playerSprite.stop()
                 }
             }
         })

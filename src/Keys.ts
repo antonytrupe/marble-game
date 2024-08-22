@@ -1,11 +1,12 @@
+import { Input } from "phaser"
 
 export interface Keys {
-    FORWARD: Phaser.Input.Keyboard.Key
-    BACKWARD: Phaser.Input.Keyboard.Key
-    LEFT: Phaser.Input.Keyboard.Key
-    RIGHT: Phaser.Input.Keyboard.Key
-    ENTER: Phaser.Input.Keyboard.Key
-    SLASH:Phaser.Input.Keyboard.Key
+    FORWARD: Input.Keyboard.Key
+    BACKWARD: Input.Keyboard.Key
+    LEFT: Input.Keyboard.Key
+    RIGHT: Input.Keyboard.Key
+    ENTER: Input.Keyboard.Key
+    SLASH:Input.Keyboard.Key
 }
 
 export enum KEY_ACTION {

@@ -1,7 +1,8 @@
-export class HudScene extends Phaser.Scene {
-    debug: Phaser.GameObjects.Text
-    // g: Phaser.GameObjects.Container
-    scaleSprite: Phaser.GameObjects.TileSprite
+import { GameObjects, Scene } from "phaser"
+
+export class HudScene extends Scene {
+    debug: GameObjects.Text
+    scaleSprite: GameObjects.TileSprite
  
     constructor() {
         super({

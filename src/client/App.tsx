@@ -2,6 +2,7 @@
 import { useRef } from 'react';
 import { IRefPhaserGame, PhaserGame } from './PhaserGame';
 import { MainMenu } from './scenes/MainMenu';
+import { Scene } from 'phaser';
 
 export default () => {
 
@@ -20,7 +21,7 @@ export default () => {
     }
 
     // Event emitted from the PhaserGame component
-    const currentScene = (scene: Phaser.Scene) => {
+    const currentScene = (scene: Scene) => {
     }
 
     return (         

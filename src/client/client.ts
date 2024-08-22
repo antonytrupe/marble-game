@@ -1,4 +1,4 @@
-import Phaser from "phaser"
+import {AUTO, Game, Scale, Types} from "phaser"
 
 import { BootScene } from "./scenes/BootScene"
 import { MarbleGameScene } from "./scenes/MarbleGameScene"
@@ -7,16 +7,16 @@ import { TestScene } from "./scenes/TestScene"
 
 const matterContainer = document.querySelector('#matter-container') as HTMLElement
 
-export const config: Phaser.Types.Core.GameConfig = {
-    type: Phaser.AUTO,
+export const config: Types.Core.GameConfig = {
+    type: AUTO,
     fps: {
         target: 60,
         forceSetTimeOut: true,
         smoothStep: false,
     },
-    width: matterContainer.clientWidth,
-    height: matterContainer.clientHeight,
-    scale: { mode: Phaser.Scale.RESIZE },
+    // width: matterContainer.clientWidth,
+    // height: matterContainer.clientHeight,
+    scale: { mode: Scale.RESIZE },
     // height: 200,
     backgroundColor: '#f8f8f0',
     parent: matterContainer,
@@ -62,20 +62,5 @@ export const config: Phaser.Types.Core.GameConfig = {
     ],
 }
 
-const game = new Phaser.Game(config)
+const game = new Game(config)
 
-export const respondToVisibility = (element: HTMLElement | null, callback: any) => {
-    // console.log('element',element)
-    var options = {
-        root: null,
-    };
-
-    var observer = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            callback(entry.intersectionRatio > 0)
-        });
-    }, options)
-    if (!!element) {
-        observer.observe(element)
-    }
-}
