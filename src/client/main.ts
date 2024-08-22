@@ -4,6 +4,10 @@ import { MainMenu } from './scenes/MainMenu';
 import { AUTO, Game } from 'phaser';
 import { Preloader } from './scenes/Preloader';
 import { Boot } from './scenes/Boot';
+import { BootScene } from './scenes/BootScene';
+import { MarbleGameScene } from './scenes/MarbleGameScene';
+import { HudScene } from './scenes/HudScene';
+import { TestScene } from './scenes/TestScene';
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
@@ -15,12 +19,44 @@ const config: Phaser.Types.Core.GameConfig = {
     parent: 'phaser-container',
     backgroundColor: '#028af8',
     scene: [
-        Boot,
+        BootScene,
         Preloader,
         MainMenu,
         MainGame,
-        GameOver
-    ]
+        GameOver,
+        MarbleGameScene,
+        HudScene,
+        TestScene,
+    ],
+    physics: {
+        default: "matter",
+        matter: {
+            enabled: true,
+            autoUpdate: true,
+            enableSleeping: false,
+            frictionNormalMultiplier: 1,
+            gravity: {
+                y: 0,
+                x: 0
+            },
+
+            debug: {
+                showBody: true,
+                // showVelocity:true,
+                // showAxes:true,
+                showAngleIndicator: true,
+                // showCollisions:true,
+                // showPositions:true,
+                // showSensors:true,
+                // showBody: true,
+                // showStaticBody: true
+            }
+        },
+        arcade: {
+            debug: true,
+            gravity: { x: 0, y: 0 }
+        },
+    },
 };
 
 const StartGame = (parent: string) => {
