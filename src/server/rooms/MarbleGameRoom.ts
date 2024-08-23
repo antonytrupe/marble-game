@@ -179,7 +179,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     player.angle = 0
     player.angularVelocity = 0
 
-    const circle = Bodies.circle(player.position.x, player.position.y, 16,
+    const circle = Bodies.circle(player.position.x, player.position.y, 30,
       {
         friction: 0,
         frictionAir: .0,

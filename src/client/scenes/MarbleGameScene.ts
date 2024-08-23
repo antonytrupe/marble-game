@@ -1,6 +1,6 @@
 import { Body } from "matter-js"
 import { Room, Client } from "colyseus.js"
-import{ GameObjects, Input, Physics, Scene, Types} from "phaser"
+import { GameObjects, Input, Physics, Scene, Types } from "phaser"
 import { WorldSchema } from "@/WorldSchema"
 import { Player } from "@/Player"
 import { Message } from "@/Message"
@@ -26,6 +26,7 @@ export class MarbleGameScene extends Scene {
     textInput: GameObjects.DOMElement
 
     chatMode: boolean = false
+    scaleSprite: GameObjects.TileSprite
 
     constructor() {
         // console.log('scene constructor')
@@ -42,7 +43,7 @@ export class MarbleGameScene extends Scene {
         this.load.image('background')
         this.load.html("input", "input.html")
         Player.preload(this)
-
+        this.load.image('scale')
     }
 
     init({ multiplayer = false, roomName }: { multiplayer: boolean, roomName: string }): void {
@@ -61,6 +62,8 @@ export class MarbleGameScene extends Scene {
             fontFamily: "Arial",
             backgroundColor: "white"
         }
+
+        this.scaleSprite = this.add.tileSprite(0, 0, 108, 10, 'scale').setOrigin(0, 0).setScrollFactor(1).setScale(1, 1)
 
         this.add.tileSprite(0, 0, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(512, 0, 512, 512, 'background')//.setOrigin(0)
@@ -96,21 +99,22 @@ export class MarbleGameScene extends Scene {
         this.input.on('wheel', (pointer: any, gameObjects: any, deltaX: any, deltaY: number, deltaZ: any) => {
             if (deltaY > 0) {
                 //console.log('zoom out')
-                var newZoom = this.cameras.main.zoom - .1
-                if (newZoom >= 0.6) {
-                    this.cameras.main.zoom = newZoom
+                this.cameras.main.zoom *= .9
+                if (this.cameras.main.zoom < 0.1) {
+                    this.cameras.main.zoom = 0.1
                 }
             }
 
             if (deltaY < 0) {
-                var newZoom = this.cameras.main.zoom + .1
-                if (newZoom <= 4) {
-                    this.cameras.main.zoom = newZoom
+                this.cameras.main.zoom /= .9
+                if (this.cameras.main.zoom > 1) {
+                    this.cameras.main.zoom = 1
                 }
             }
             console.log(this.cameras.main.zoom)
-            //this.scaleSprite.setScrollFactor( this.cameras.main.zoom)
-            //this.get.tileSprite(0, 0, 108, 10, 'scale').setOrigin(0).setScrollFactor(0)
+            if (this.cameras.main.zoom <= .11) {
+                console.log('switch to difference scene/room')
+            }
         })
 
 
@@ -274,8 +278,8 @@ export class MarbleGameScene extends Scene {
 
         let playerSprite: Physics.Matter.Sprite
         {
-            const playerCollider = this.matter.bodies.circle(player.position.x, player.position.y, 16, { isSensor: false, label: 'playerCollider' })
-            const playerSensor = this.matter.bodies.circle(player.position.x, player.position.y, 20, { isSensor: true, label: 'playerCollider' })
+            const playerCollider = this.matter.bodies.circle(player.position.x, player.position.y, 30, { isSensor: false, label: 'playerCollider' })
+            const playerSensor = this.matter.bodies.circle(player.position.x, player.position.y, 32, { isSensor: true, label: 'playerCollider' })
             const compoundBody = this.matter.body.create({ parts: [playerCollider, playerSensor] })
 
             playerSprite = new Physics.Matter.Sprite(this.matter.world,
@@ -286,11 +290,12 @@ export class MarbleGameScene extends Scene {
                 frictionAir: .00,
                 frictionStatic: .0
             })
+            playerSprite.play('marble-roll', true).anims.pause()
+
             player.body = playerSprite.body as unknown as Body
 
             playerSprite.setExistingBody(compoundBody, true)
             this.add.existing(playerSprite)
-            // playerSprite.play('marble-roll')
 
         }
 
@@ -330,7 +335,9 @@ export class MarbleGameScene extends Scene {
                 // console.log(mb.velocity)
 
                 if (mb.speed > 0) {
-                    playerSprite.play('marble-roll', true)
+                    // playerSprite.play('marble-roll', true)
+                    // playerSprite.anims.exists
+                    playerSprite.anims.resume()
                     // playerSprite.anims.resume()
                     // playerSprite.anims.hasStarted
                 }
