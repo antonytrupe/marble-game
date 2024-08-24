@@ -63,8 +63,6 @@ export class MarbleGameScene extends Scene {
             backgroundColor: "white"
         }
 
-        this.scaleSprite = this.add.tileSprite(0, 0, 108, 10, 'scale').setOrigin(0, 0).setScrollFactor(1).setScale(1, 1)
-
         this.add.tileSprite(0, 0, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(512, 0, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(1024, 0, 512, 512, 'background')//.setOrigin(0)
@@ -74,6 +72,8 @@ export class MarbleGameScene extends Scene {
         this.add.tileSprite(0, 1024, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(512, 1024, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(1024, 1024, 512, 512, 'background')//.setOrigin(0)
+      
+        this.scaleSprite = this.add.tileSprite(0, 0, 306, 60, 'scale').setOrigin(0, 0).setScrollFactor(1).setScale(1, 1)
 
         this.textInput = this.add.dom(100, 100).createFromCache("input").setVisible(false)
 
@@ -179,8 +179,7 @@ export class MarbleGameScene extends Scene {
             const entity = this.playerEntities[sessionId]
             const [mb] = this.matter.getMatterBodies([this.currentPlayer])
 
-            //TODO what about going backwards?
-            this.matter.body.setVelocity(mb, getVelocity(mb.angle, mb.speed))
+            // this.matter.body.setVelocity(mb, getVelocity(mb.angle, mb.speed))
 
             //lerp
             const { serverX, serverY } = entity.data.values

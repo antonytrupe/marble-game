@@ -11,7 +11,7 @@ export class HudScene extends Scene {
     }
 
     preload() {
-        this.load.image('scale')
+        // this.load.image('scale')
     }
 
     init(): void {
