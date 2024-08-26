@@ -2,7 +2,7 @@ import { Body } from "matter-js"
 import { Room, Client } from "colyseus.js"
 import { GameObjects, Input, Physics, Scene, Types } from "phaser"
 import { WorldSchema } from "@/WorldSchema"
-import { Player } from "@/Player"
+import { Player, SPEED_MODE } from "@/Player"
 import { Message } from "@/Message"
 import { getVelocity } from "@/functions"
 import World from "@/World"
@@ -16,8 +16,8 @@ export class MarbleGameScene extends Scene {
 
     room: Room<WorldSchema>
 
-    currentPlayer: Physics.Matter.Sprite
-    playerEntities: { [sessionId: string]: Physics.Matter.Image } = {}
+    currentPlayerSprite: Physics.Matter.Sprite
+    playerSprites: { [sessionId: string]: Physics.Matter.Image } = {}
 
     keys: Keys
     world: World = new World()
@@ -72,7 +72,7 @@ export class MarbleGameScene extends Scene {
         this.add.tileSprite(0, 1024, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(512, 1024, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(1024, 1024, 512, 512, 'background')//.setOrigin(0)
-      
+
         this.scaleSprite = this.add.tileSprite(0, 0, 306, 60, 'scale').setOrigin(0, 0).setScrollFactor(1).setScale(1, 1)
 
         this.textInput = this.add.dom(100, 100).createFromCache("input").setVisible(false)
@@ -93,7 +93,8 @@ export class MarbleGameScene extends Scene {
                 LEFT: Input.Keyboard.KeyCodes.A,
                 RIGHT: Input.Keyboard.KeyCodes.D,
                 ENTER: Input.Keyboard.KeyCodes.ENTER,
-                SLASH: Input.Keyboard.KeyCodes.FORWARD_SLASH
+                SLASH: Input.Keyboard.KeyCodes.FORWARD_SLASH,
+                SHIFT: Input.Keyboard.KeyCodes.SHIFT
             }, false) as Keys
 
         this.input.on('wheel', (pointer: any, gameObjects: any, deltaX: any, deltaY: number, deltaZ: any) => {
@@ -130,10 +131,10 @@ export class MarbleGameScene extends Scene {
         // console.log('update')
 
         //this.room.connection.isOpen
-        if (!this.currentPlayer) { return }
+        if (!this.currentPlayerSprite) { return }
 
         //this.matter.composite.get(this.matter.world,this.currentPlayer,'body')
-        const [body] = this.matter.getMatterBodies([this.currentPlayer]) as unknown as Body[]
+        const [body] = this.matter.getMatterBodies([this.currentPlayerSprite]) as unknown as Body[]
         //const mb=this.matter.composite.get(this.matter.world.localWorld as unknown as CompositeType, this.currentPlayer., 'body')
         const currentPlayer: Player | undefined = this.room.state.players.get(this.room.sessionId)
         // console.log(currentPlayer)
@@ -157,118 +158,145 @@ export class MarbleGameScene extends Scene {
         this.textInput.setVisible(this.chatMode)
         // this.textInput.
         // console.log(this.currentPlayer.x)
-        this.textInput.x = this.currentPlayer.x - this.textInput.width / 2 + this.textInput.width / 2
-        this.textInput.y = this.currentPlayer.y + this.currentPlayer.height / 2 + this.textInput.height / 2
+        this.textInput.x = this.currentPlayerSprite.x - this.textInput.width / 2 + this.textInput.width / 2
+        this.textInput.y = this.currentPlayerSprite.y + this.currentPlayerSprite.height / 2 + this.textInput.height / 2
         // this.textInput.width
 
         if (!this.chatMode && !!currentPlayer) {
             //forward/backward
-            this.move(currentPlayer, body, this.currentPlayer)
+            this.keyInputs(currentPlayer)
+            Player.move(currentPlayer)
         }
 
         //this.localRef.x = this.currentPlayer.x
         //this.localRef.y = this.currentPlayer.y
 
-        for (let sessionId in this.playerEntities) {
-            //interpolate all player entities
-            //(except the current player)
-            if (sessionId === this.room.sessionId) {
-                //continue
-            }
+        // for (let sessionId in this.playerEntities) {
+        //     //interpolate all player entities
+        //     //(except the current player)
+        //     if (sessionId === this.room.sessionId) {
+        //         //continue
+        //     }
 
-            const entity = this.playerEntities[sessionId]
-            const [mb] = this.matter.getMatterBodies([this.currentPlayer])
+        //     const entity = this.playerEntities[sessionId]
+        //     const [mb] = this.matter.getMatterBodies([this.currentPlayerSprite])
 
-            // this.matter.body.setVelocity(mb, getVelocity(mb.angle, mb.speed))
+        //     // this.matter.body.setVelocity(mb, getVelocity(mb.angle, mb.speed))
 
-            //lerp
-            const { serverX, serverY } = entity.data.values
+        //     //lerp
+        //     const { serverX, serverY } = entity.data.values
 
-            //entity.x = Phaser.Math.Linear(entity.x, serverX, 0.2)
-            //entity.y = Phaser.Math.Linear(entity.y, serverY, 0.2)
-            //this.matter.body.setPosition(mb, {
-            //x: Phaser.Math.Linear(entity.x, serverX, 0.2),
-            //y: Phaser.Math.Linear(entity.y, serverY, 0.2)
-            //}, false)
-        }
+        //     //entity.x = Phaser.Math.Linear(entity.x, serverX, 0.2)
+        //     //entity.y = Phaser.Math.Linear(entity.y, serverY, 0.2)
+        //     //this.matter.body.setPosition(mb, {
+        //     //x: Phaser.Math.Linear(entity.x, serverX, 0.2),
+        //     //y: Phaser.Math.Linear(entity.y, serverY, 0.2)
+        //     //}, false)
+        // }
     }
 
-    private move(player: Player, body: Body, sprite: Physics.Matter.Sprite) {
+    private keyInputs(player: Player) {
+        if (!player.inputQueue) {
+            player.inputQueue = []
+        }
+
+        if (Input.Keyboard.JustDown(this.keys.SHIFT)) {
+            player.inputQueue.push(KEY_ACTION.JUSTDOWN_SHIFT)
+            this.room.send(0, KEY_ACTION.JUSTDOWN_SHIFT)
+            // player.speedMode = SPEED_MODE.RUN
+        }
+
+        if (Input.Keyboard.JustUp(this.keys.SHIFT)) {
+            this.room.send(0, KEY_ACTION.JUSTUP_SHIFT)
+            player.inputQueue.push(KEY_ACTION.JUSTUP_SHIFT)
+            // player.speedMode = SPEED_MODE.WALK
+        }
+
         if (Input.Keyboard.JustDown(this.keys.FORWARD)) {
             this.room.send(0, KEY_ACTION.JUSTDOWN_FORWARD)
-            player.speed = SPEED
+            player.inputQueue.push(KEY_ACTION.JUSTDOWN_FORWARD)
+            // player.speed = SPEED
         }
 
         if (Input.Keyboard.JustDown(this.keys.BACKWARD)) {
             this.room.send(0, KEY_ACTION.JUSTDOWN_BACKWARD)
-            player.speed = -SPEED
+            player.inputQueue.push(KEY_ACTION.JUSTDOWN_BACKWARD)
+            // player.speed = -SPEED
         }
 
         if (Input.Keyboard.JustUp(this.keys.FORWARD) && player.speed === SPEED) {
             this.room.send(0, KEY_ACTION.JUSTUP_FORWARD)
-            if (this.keys.BACKWARD.isDown) {
-                player.speed = -SPEED
-            }
-            else {
-                player.speed = 0
-            }
+            player.inputQueue.push(KEY_ACTION.JUSTUP_FORWARD)
+            // if (this.keys.BACKWARD.isDown) {
+            //     player.speed = -SPEED
+            // }
+            // else {
+            //     player.speed = 0
+            // }
         }
         if (Input.Keyboard.JustUp(this.keys.BACKWARD) && player.speed === -SPEED) {
             this.room.send(0, KEY_ACTION.JUSTUP_BACKWARD)
-            if (this.keys.FORWARD.isDown) {
-                player.speed = SPEED
-            }
-            else {
-                player.speed = 0
-            }
+            player.inputQueue.push(KEY_ACTION.JUSTUP_BACKWARD)
+            // if (this.keys.FORWARD.isDown) {
+            //     player.speed = SPEED
+            // }
+            // else {
+            //     player.speed = 0
+            // }
         }
 
         //left/right
         if (Input.Keyboard.JustDown(this.keys.LEFT)) {
             this.room.send(0, KEY_ACTION.JUSTDOWN_LEFT)
-            player.angularVelocity = -TURN_SPEED
+            player.inputQueue.push(KEY_ACTION.JUSTDOWN_LEFT)
+            // player.angularVelocity = -TURN_SPEED
         }
         if (Input.Keyboard.JustDown(this.keys.RIGHT)) {
             this.room.send(0, KEY_ACTION.JUSTDOWN_RIGHT)
-            player.angularVelocity = TURN_SPEED
+            player.inputQueue.push(KEY_ACTION.JUSTDOWN_RIGHT)
+            // player.angularVelocity = TURN_SPEED
         }
 
         if (Input.Keyboard.JustUp(this.keys.LEFT)) {
             this.room.send(0, KEY_ACTION.JUSTUP_LEFT)
-            if (this.keys.RIGHT.isDown) {
-                player.angularVelocity = TURN_SPEED
-            }
-            else {
-                player.angularVelocity = 0
-            }
+            player.inputQueue.push(KEY_ACTION.JUSTUP_LEFT)
+            // if (this.keys.RIGHT.isDown) {
+            //     player.angularVelocity = TURN_SPEED
+            // }
+            // else {
+            //     player.angularVelocity = 0
+            // }
         }
         if (Input.Keyboard.JustUp(this.keys.RIGHT)) {
             this.room.send(0, KEY_ACTION.JUSTUP_RIGHT)
-            if (this.keys.LEFT.isDown) {
-                player.angularVelocity = -TURN_SPEED
-            }
-            else {
-                player.angularVelocity = 0
-            }
+            player.inputQueue.push(KEY_ACTION.JUSTUP_RIGHT)
+            // if (this.keys.LEFT.isDown) {
+            //     player.angularVelocity = -TURN_SPEED
+            // }
+            // else {
+            //     player.angularVelocity = 0
+            // }
         }
 
-        Body.setAngularVelocity(body, player.angularVelocity)
-        const velocity = getVelocity(body.angle, player.speed)
-        Body.setVelocity(body, velocity)
+        // Body.setAngularVelocity(player.body, player.angularVelocity)
+        // const velocity = getVelocity(player.body.angle, player.speed * player.speedMode)
+        // Body.setVelocity(player.body, velocity)
 
-        if (body.speed <= .01 && body.angularSpeed <= .01) {
-            Body.setStatic(body, true)
-        }
-        else {
-            Body.setStatic(body, false)
-        }
+        // if (player.body.speed <= .01 && player.body.angularSpeed <= .01) {
+        //     Body.setStatic(player.body, true)
+        // }
+        // else {
+        //     Body.setStatic(player.body, false)
+        // }
     }
 
+
+
     private onRemove(sessionId: string) {
-        const entity = this.playerEntities[sessionId]
+        const entity = this.playerSprites[sessionId]
         if (entity) {
             entity.destroy()
-            delete this.playerEntities[sessionId]
+            delete this.playerSprites[sessionId]
         }
     }
 
@@ -287,13 +315,16 @@ export class MarbleGameScene extends Scene {
                 shape: 'circle',
                 friction: .0,
                 frictionAir: .00,
-                frictionStatic: .0
+                frictionStatic: .0,isStatic:true
             })
+            // playerSprite.setFixedRotation()
             playerSprite.play('marble-roll', true).anims.pause()
+
+
+            playerSprite.setExistingBody(compoundBody, true)
 
             player.body = playerSprite.body as unknown as Body
 
-            playerSprite.setExistingBody(compoundBody, true)
             this.add.existing(playerSprite)
 
         }
@@ -310,11 +341,11 @@ export class MarbleGameScene extends Scene {
         // this.matter.body.setInertia(mb, Infinity)
         // mb.restitution = 0
         //this.matter.body.setStatic(mb,true)
-        this.playerEntities[sessionId] = playerSprite
+        this.playerSprites[sessionId] = playerSprite
 
         //is current player
         if (sessionId === this.room.sessionId) {
-            this.currentPlayer = playerSprite
+            this.currentPlayerSprite = playerSprite
             this.cameras.main.startFollow(playerSprite, true, .7, .7)
             // this.currentPlayer.play('marble-roll',true)
         }
@@ -402,7 +433,6 @@ export class MarbleGameScene extends Scene {
 
         try {
             this.room = await client.joinOrCreate(this.roomName, {})
-
 
             this.room.state.onChange(() => {
                 //show the turn number somewhere

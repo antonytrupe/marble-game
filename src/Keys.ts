@@ -7,6 +7,7 @@ export interface Keys {
     RIGHT: Input.Keyboard.Key
     ENTER: Input.Keyboard.Key
     SLASH:Input.Keyboard.Key
+    SHIFT:Input.Keyboard.Key
 }
 
 export enum KEY_ACTION {
@@ -17,5 +18,7 @@ export enum KEY_ACTION {
     JUSTDOWN_FORWARD = "JUSTDOWN_FORWARD",
     JUSTDOWN_BACKWARD = "JUSTDOWN_BACKWARD",
     JUSTDOWN_RIGHT = "JUSTDOWN_RIGHT",
-    JUSTDOWN_LEFT = "JUSTDOWN_LEFT"
+    JUSTDOWN_LEFT = "JUSTDOWN_LEFT",
+    JUSTDOWN_SHIFT = "JUSTDOWN_SHIFT",
+    JUSTUP_SHIFT = "JUSTUP_SHIFT"
 }

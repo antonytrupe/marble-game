@@ -1,7 +1,7 @@
 import { Bodies, Body, Composite, Engine } from "matter-js"
 import { Room, Client, updateLobby } from "colyseus"
 import { WorldSchema } from "@/WorldSchema"
-import { Player } from "@/Player"
+import { Player, SPEED_MODE } from "@/Player"
 import { Message } from "@/Message"
 import { getVelocity } from "@/functions"
 import World from "@/World"
@@ -36,13 +36,13 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     this.state.mapWidth = 800
     this.state.mapHeight = 600
 
-    this.onMessage(0, (client, input) => {
+    this.onMessage(0, (client, input: KEY_ACTION) => {
       // console.log(client.sessionId,input)
       //handle player input
       const player = this.state.players.get(client.sessionId)
 
       //enqueue input to user input buffer.
-      player?.inputQueue.push(input)
+      player?.inputQueue?.push(input)
     })
 
     this.onMessage('chat', (client: Client, input) => {
@@ -84,7 +84,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
       player.position.y = body.position.y
 
       //dequeue player inputs
-      this.move(player, body)
+      this.move(player)
 
     })
     // if (deltaTime >= 16.667)
@@ -93,77 +93,84 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     // Engine.update(this.engine, deltaTime / 2)
   }
 
-  private move(player: Player, body: Body) {
-    let input: KEY_ACTION | undefined
-    while (input = player.inputQueue.shift()) {
-      console.log(player.id, input)
+  private move(player: Player) {
+    Player.move(player)
 
-      switch (input) {
-        case KEY_ACTION.JUSTDOWN_FORWARD:
-          player.speed = SPEED
-          player.forward = true
-          break
-        case KEY_ACTION.JUSTUP_FORWARD:
-          player.forward = false
-          if (player.backward) {
-            player.speed = -SPEED
-          }
-          else {
-            player.speed = 0
-          }
-          break
-        case KEY_ACTION.JUSTDOWN_BACKWARD:
-          player.speed = -SPEED
-          player.backward = true
-          break
-        case KEY_ACTION.JUSTUP_BACKWARD:
-          player.backward = false
-          if (player.forward) {
-            player.speed = SPEED
-          }
-          else {
-            player.speed = 0
-          }
-          break
-        case KEY_ACTION.JUSTDOWN_RIGHT:
-          player.right = true
-          player.angularVelocity = TURN_SPEED
-          break
-        case KEY_ACTION.JUSTUP_RIGHT:
-          player.right = false
-          if (player.left) {
-            player.angularVelocity = -TURN_SPEED
-          }
-          else {
-            player.angularVelocity = 0
-          }
-          break
-        case KEY_ACTION.JUSTDOWN_LEFT:
-          player.left = true
-          player.angularVelocity = -TURN_SPEED
-          break
-        case KEY_ACTION.JUSTUP_LEFT:
-          player.left = false
-          if (player.right) {
-            player.angularVelocity = TURN_SPEED
-          }
-          else {
-            player.angularVelocity = 0
-          }
-          break
-      }
-    }
+    // let input: KEY_ACTION | undefined
+    // while (input = player.inputQueue.shift()) {
+    //   console.log(player.id, input)
 
-    Body.setAngularVelocity(body, player.angularVelocity)
-    const velocity = getVelocity(body.angle, player.speed)
-    Body.setVelocity(body, velocity)
-    if (body.speed <= .01 && body.angularSpeed <= .01) {
-      this.world.setStatic(body, player)
-    }
-    else {
-      Body.setStatic(body, false)
+    //   switch (input) {
+    //     case KEY_ACTION.JUSTDOWN_SHIFT:
+    //       player.speedMode = SPEED_MODE.RUN
+    //       break
+    //     case KEY_ACTION.JUSTUP_SHIFT:
+    //       player.speedMode = SPEED_MODE.WALK
+    //       break
+    //     case KEY_ACTION.JUSTDOWN_FORWARD:
+    //       player.speed = SPEED
+    //       player.forward = true
+    //       break
+    //     case KEY_ACTION.JUSTUP_FORWARD:
+    //       player.forward = false
+    //       if (player.backward) {
+    //         player.speed = -SPEED
+    //       }
+    //       else {
+    //         player.speed = 0
+    //       }
+    //       break
+    //     case KEY_ACTION.JUSTDOWN_BACKWARD:
+    //       player.speed = -SPEED
+    //       player.backward = true
+    //       break
+    //     case KEY_ACTION.JUSTUP_BACKWARD:
+    //       player.backward = false
+    //       if (player.forward) {
+    //         player.speed = SPEED
+    //       }
+    //       else {
+    //         player.speed = 0
+    //       }
+    //       break
+    //     case KEY_ACTION.JUSTDOWN_RIGHT:
+    //       player.right = true
+    //       player.angularVelocity = TURN_SPEED
+    //       break
+    //     case KEY_ACTION.JUSTUP_RIGHT:
+    //       player.right = false
+    //       if (player.left) {
+    //         player.angularVelocity = -TURN_SPEED
+    //       }
+    //       else {
+    //         player.angularVelocity = 0
+    //       }
+    //       break
+    //     case KEY_ACTION.JUSTDOWN_LEFT:
+    //       player.left = true
+    //       player.angularVelocity = -TURN_SPEED
+    //       break
+    //     case KEY_ACTION.JUSTUP_LEFT:
+    //       player.left = false
+    //       if (player.right) {
+    //         player.angularVelocity = TURN_SPEED
+    //       }
+    //       else {
+    //         player.angularVelocity = 0
+    //       }
+    //       break
+    //   }
+    // }
 
-    }
+    // Body.setAngularVelocity(player.body, player.angularVelocity)
+    // const velocity = getVelocity(player.body.angle, player.speed * player.speedMode)
+    // Body.setVelocity(player.body, velocity)
+    // if (player.body.speed <= .01 && player.body.angularSpeed <= .01) {
+    //   this.world.setStatic(player.body, player)
+    // }
+    // else {
+    //   Body.setStatic(player.body, false)
+    // }
   }
 
   onJoin(client: Client, options: any) {

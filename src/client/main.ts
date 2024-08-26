@@ -40,17 +40,17 @@ const config: Types.Core.GameConfig = {
                 x: 0
             },
 
-            debug: {
-                showBody: true,
-                // showVelocity:true,
-                // showAxes:true,
-                showAngleIndicator: true,
-                // showCollisions:true,
-                // showPositions:true,
-                // showSensors:true,
-                // showBody: true,
-                // showStaticBody: true
-            }
+            // debug: {
+            //     showBody: true,
+            //     // showVelocity:true,
+            //     // showAxes:true,
+            //     showAngleIndicator: true,
+            //     // showCollisions:true,
+            //     // showPositions:true,
+            //     // showSensors:true,
+            //     // showBody: true,
+            //     // showStaticBody: true
+            // }
         },
         arcade: {
             debug: true,

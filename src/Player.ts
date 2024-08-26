@@ -4,6 +4,13 @@ import { Body, World } from "matter-js"
 import { Message } from "@/Message"
 import { Vector } from "@/Vector"
 import { KEY_ACTION } from "@/Keys"
+import { SPEED, TURN_SPEED } from "./SPEED"
+import { getVelocity } from "./functions"
+
+export enum SPEED_MODE {
+  WALK = 1,
+  RUN = 2,
+}
 
 export class Player extends Schema {
 
@@ -15,6 +22,8 @@ export class Player extends Schema {
   @type("number") angle: number = 0
   @type("number") angularVelocity: number = 0
   @type("number") speed: number = 0
+  @type("number") movement: number = 30
+  @type("number") speedMode: SPEED_MODE = SPEED_MODE.WALK
   @type([Message]) messages = new ArraySchema<Message>()
 
   //things the client is authoratative on
@@ -35,11 +44,89 @@ export class Player extends Schema {
   static preload(scene: Scene) {
     scene.load.image('ship_0001')
     scene.load.atlas('marble', 'marble/texture.png', 'marble/texture.json')
-    
+
   }
 
-  static create(scene: Scene){
-    
-    scene.anims.create({ key: 'marble-roll', frameRate: 10, frames:scene.anims.generateFrameNames('marble', { start: 0, end: 11, prefix: '', suffix: '.png' }), repeat: -1 })
+  static create(scene: Scene) {
+
+    scene.anims.create({ key: 'marble-roll', frameRate: 10, frames: scene.anims.generateFrameNames('marble', { start: 0, end: 11, prefix: '', suffix: '.png' }), repeat: -1 })
+  }
+
+  static move(player: Player) {
+    let input: KEY_ACTION | undefined
+    while (input = player.inputQueue?.shift()) {
+      console.log(player.id, input)
+
+      switch (input) {
+        case KEY_ACTION.JUSTDOWN_SHIFT:
+          player.speedMode = SPEED_MODE.RUN
+          break
+        case KEY_ACTION.JUSTUP_SHIFT:
+          player.speedMode = SPEED_MODE.WALK
+          break
+        case KEY_ACTION.JUSTDOWN_FORWARD:
+          player.speed = SPEED
+          player.forward = true
+          break
+        case KEY_ACTION.JUSTUP_FORWARD:
+          player.forward = false
+          if (player.backward) {
+            player.speed = -SPEED
+          }
+          else {
+            player.speed = 0
+          }
+          break
+        case KEY_ACTION.JUSTDOWN_BACKWARD:
+          player.speed = -SPEED
+          player.backward = true
+          break
+        case KEY_ACTION.JUSTUP_BACKWARD:
+          player.backward = false
+          if (player.forward) {
+            player.speed = SPEED
+          }
+          else {
+            player.speed = 0
+          }
+          break
+        case KEY_ACTION.JUSTDOWN_RIGHT:
+          player.right = true
+          player.angularVelocity = TURN_SPEED
+          break
+        case KEY_ACTION.JUSTUP_RIGHT:
+          player.right = false
+          if (player.left) {
+            player.angularVelocity = -TURN_SPEED
+          }
+          else {
+            player.angularVelocity = 0
+          }
+          break
+        case KEY_ACTION.JUSTDOWN_LEFT:
+          player.left = true
+          player.angularVelocity = -TURN_SPEED
+          break
+        case KEY_ACTION.JUSTUP_LEFT:
+          player.left = false
+          if (player.right) {
+            player.angularVelocity = TURN_SPEED
+          }
+          else {
+            player.angularVelocity = 0
+          }
+          break
+      }
+    }
+
+    Body.setAngularVelocity(player.body, player.angularVelocity)
+    const velocity = getVelocity(player.body.angle, player.speed * player.speedMode)
+    Body.setVelocity(player.body, velocity)
+    if (player.body.speed <= .01 && player.body.angularSpeed <= .01) {
+      Body.setStatic(player.body, true)
+    }
+    else {
+      Body.setStatic(player.body, false)
+    }
   }
 }
