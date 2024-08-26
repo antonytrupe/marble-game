@@ -1,28 +1,28 @@
 import { LobbyRoom, matchMaker, Server } from "colyseus"
 import config, { listen } from "@colyseus/tools"
-import { auth } from "@colyseus/auth"
+// import { auth } from "@colyseus/auth"
 import { monitor } from "@colyseus/monitor"
 import { MarbleGameRoom } from "@/server/rooms/MarbleGameRoom"
 
 let gameServerRef: Server
 
-auth.oauth.addProvider('google', {
-    key: process.env.GOOGLE_KEY || 'TODO', // Client ID
-    secret: process.env.GOOGLE_SECRET || 'TODO', // Client Secret
-    scope: ['email'],//'identify', 
-});
+// auth.oauth.addProvider('google', {
+//     key: process.env.GOOGLE_KEY || 'TODO', // Client ID
+//     secret: process.env.GOOGLE_SECRET || 'TODO', // Client Secret
+//     scope: ['email'],//'identify', 
+// });
 
-auth.oauth.onCallback(async (data, provider) => {
-    const profile = data.profile;
-    console.log('profile', profile)
-    console.log(provider)
-    // return await User.upsert({
-    //     discord_id: profile.id,
-    //     name: profile.global_name || profile.username,
-    //     locale: profile.locale,
-    //     email: profile.email,
-    // });
-});
+// auth.oauth.onCallback(async (data, provider) => {
+//     const profile = data.profile;
+//     console.log('profile', profile)
+//     console.log(provider)
+//     // return await User.upsert({
+//     //     discord_id: profile.id,
+//     //     name: profile.global_name || profile.username,
+//     //     locale: profile.locale,
+//     //     email: profile.email,
+//     // });
+// });
 
 // const one=Math.floor(Math.random()*100) 
 // const two=Math.floor(Math.random()*100) 
@@ -65,9 +65,8 @@ const appConfig = config({
          */
         app.use("/colyseus", monitor())
 
-        app.use(auth.prefix, auth.routes());
+        // app.use(auth.prefix, auth.routes());
     },
-
 
     beforeListen: async () => {
         /**
