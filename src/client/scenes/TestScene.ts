@@ -3,8 +3,8 @@ import { Input, Physics, Scene } from "phaser"
 import { getVelocity } from "@/functions"
 import { Player } from "@/Player"
 import { Keys } from "@/Keys"
-import { SPEED, TURN_SPEED } from "@/SPEED"
-
+import { SPEED, TURN_SPEED } from "@/CONSTANTS"
+ 
 export class TestScene extends Scene {
     keys: Keys
     player: Player = new Player({ x: 200, y: 250 })

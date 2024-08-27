@@ -4,11 +4,10 @@ import { GameObjects, Input, Physics, Scene, Types } from "phaser"
 import { WorldSchema } from "@/WorldSchema"
 import { Player } from "@/Player"
 import { Message } from "@/Message"
-import World from "@/World"
+import { KEY_ACTION, Keys } from "@/Keys"
+import { SPEED } from "@/CONSTANTS"
 import { respondToVisibility } from "@/client/respondToVisibility"
 import ChatBubble from "@/client/ChatBubble"
-import { KEY_ACTION, Keys } from "@/Keys"
-import { SPEED } from "@/SPEED";
 import { BACKEND_URL } from "@/client/BACKEND_URL"
 
 export class MarbleGameScene extends Scene {
@@ -19,7 +18,7 @@ export class MarbleGameScene extends Scene {
     playerSprites: { [sessionId: string]: Physics.Matter.Image } = {}
 
     keys: Keys
-    world: World = new World()
+    // world: World = new World()
     roomName: string
 
     textInput: GameObjects.DOMElement
@@ -54,7 +53,7 @@ export class MarbleGameScene extends Scene {
         console.log('MarbleGameScene create')
 
         Player.create(this)
-       
+
         this.add.tileSprite(0, 0, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(512, 0, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(1024, 0, 512, 512, 'background')//.setOrigin(0)
@@ -249,7 +248,7 @@ export class MarbleGameScene extends Scene {
                 shape: 'circle',
                 friction: .0,
                 frictionAir: .00,
-                frictionStatic: .0,isStatic:true
+                frictionStatic: .0, isStatic: true
             })
             playerSprite.play('marble-roll', true).anims.pause()
 
@@ -283,9 +282,9 @@ export class MarbleGameScene extends Scene {
         player.velocity.onChange(() => {
             if (player.velocity !== undefined) {
                 if (player.velocity.x !== 0 || player.velocity.y !== 0) {
-                    this.world.setStatic(playerSprite.body as unknown as Body, player)
+                    // Body.setStatic(player.body, false)
                     // this.matter.body.setStatic(mb, false)
-
+                    Player.move(player)
                 }
                 this.matter.body.setVelocity(mb, player.velocity)
 
@@ -313,14 +312,14 @@ export class MarbleGameScene extends Scene {
         })
 
         player.onChange(() => {
-            this.world.setStatic(playerSprite.body as unknown as Body, player)
+            Player.move(player)
 
             if (player.angle !== undefined) {
                 this.matter.body.setAngle(mb, player.angle, true)
             }
             if (player.angularVelocity !== undefined) {
                 if (player.angularVelocity !== 0) {
-                    this.world.setStatic(playerSprite.body as unknown as Body, player)
+                    Player.move(player)
                 }
                 this.matter.body.setAngularVelocity(mb, player.angularVelocity)
             }

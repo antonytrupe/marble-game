@@ -4,13 +4,8 @@ import { Body, World } from "matter-js"
 import { Message } from "@/Message"
 import { Vector } from "@/Vector"
 import { KEY_ACTION } from "@/Keys"
-import { SPEED, TURN_SPEED } from "./SPEED"
+import { SPEED, SPEED_MODE, TURN_SPEED } from "./CONSTANTS"
 import { getVelocity } from "./functions"
-
-export enum SPEED_MODE {
-  WALK = 1,
-  RUN = 2,
-}
 
 export class Player extends Schema {
 

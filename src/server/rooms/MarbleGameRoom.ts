@@ -3,12 +3,11 @@ import { Room, Client, updateLobby } from "colyseus"
 import { WorldSchema } from "@/WorldSchema"
 import { Player } from "@/Player"
 import { Message } from "@/Message"
-import World from "@/World"
 import { KEY_ACTION } from "@/Keys"
 
 export class MarbleGameRoom extends Room<WorldSchema> {
   engine: Engine
-  world: World = new World()
+  // world: World = new World()
 
   onCreate(options: any) {
     this.autoDispose = false
@@ -109,8 +108,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
         frictionStatic: .0
       })
 
-    // circle.restitution = 0
-    this.world.setStatic(circle, player)
+    Body.setStatic(circle, true)
 
     player.id = circle.id
     player.body = circle
