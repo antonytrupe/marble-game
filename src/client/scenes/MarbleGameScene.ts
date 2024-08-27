@@ -2,14 +2,13 @@ import { Body } from "matter-js"
 import { Room, Client } from "colyseus.js"
 import { GameObjects, Input, Physics, Scene, Types } from "phaser"
 import { WorldSchema } from "@/WorldSchema"
-import { Player, SPEED_MODE } from "@/Player"
+import { Player } from "@/Player"
 import { Message } from "@/Message"
-import { getVelocity } from "@/functions"
 import World from "@/World"
 import { respondToVisibility } from "@/client/respondToVisibility"
 import ChatBubble from "@/client/ChatBubble"
 import { KEY_ACTION, Keys } from "@/Keys"
-import { SPEED, TURN_SPEED } from "@/SPEED";
+import { SPEED } from "@/SPEED";
 import { BACKEND_URL } from "@/client/BACKEND_URL"
 
 export class MarbleGameScene extends Scene {
@@ -39,30 +38,23 @@ export class MarbleGameScene extends Scene {
     }
 
     preload() {
-        console.log('MarbleGameScene preload')
+        // console.log('MarbleGameScene preload')
         this.load.image('background')
         this.load.html("input", "input.html")
         Player.preload(this)
         this.load.image('scale')
     }
 
-    init({ multiplayer = false, roomName }: { multiplayer: boolean, roomName: string }): void {
+    init({ roomName }: { roomName: string }): void {
         console.log('MarbleGameScene init')
         this.roomName = roomName
-        // console.log(multiplayer)
     }
 
     async create() {
         console.log('MarbleGameScene create')
 
         Player.create(this)
-        const textStyle: Types.GameObjects.Text.TextStyle = {
-            color: "#000000",
-            fontSize: "24px",
-            fontFamily: "Arial",
-            backgroundColor: "white"
-        }
-
+       
         this.add.tileSprite(0, 0, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(512, 0, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(1024, 0, 512, 512, 'background')//.setOrigin(0)
@@ -78,7 +70,6 @@ export class MarbleGameScene extends Scene {
         this.textInput = this.add.dom(100, 100).createFromCache("input").setVisible(false)
 
         respondToVisibility(document.getElementById('text'), (visible: boolean) => {
-            // console.log('visible', visible)
             if (visible) {
                 document.getElementById('text')?.focus()
             }
@@ -118,7 +109,6 @@ export class MarbleGameScene extends Scene {
             }
         })
 
-
         //connect with the room
         await this.connect()
         this.scene.launch('HUD')
@@ -130,22 +120,12 @@ export class MarbleGameScene extends Scene {
     update(time: number, delta: number): void {
         // console.log('update')
 
-        //this.room.connection.isOpen
         if (!this.currentPlayerSprite) { return }
 
-        //this.matter.composite.get(this.matter.world,this.currentPlayer,'body')
-        const [body] = this.matter.getMatterBodies([this.currentPlayerSprite]) as unknown as Body[]
-        //const mb=this.matter.composite.get(this.matter.world.localWorld as unknown as CompositeType, this.currentPlayer., 'body')
         const currentPlayer: Player | undefined = this.room.state.players.get(this.room.sessionId)
-        // console.log(currentPlayer)
-        //console.log(mb.angle)
 
         if (Phaser.Input.Keyboard.JustDown(this.keys.ENTER)) {
-            // console.log('enter down')
-            // this.textInputToggle = !this.textInputToggle
             this.chatMode = !this.chatMode
-            // const text: HTMLInputElement = this.textInput.getChildByName("text") as HTMLInputElement
-            // console.log(document.activeElement)
 
             if (!this.chatMode) {
                 const text: HTMLInputElement = this.textInput.getChildByName("text") as HTMLInputElement
@@ -156,11 +136,8 @@ export class MarbleGameScene extends Scene {
         }
 
         this.textInput.setVisible(this.chatMode)
-        // this.textInput.
-        // console.log(this.currentPlayer.x)
         this.textInput.x = this.currentPlayerSprite.x - this.textInput.width / 2 + this.textInput.width / 2
         this.textInput.y = this.currentPlayerSprite.y + this.currentPlayerSprite.height / 2 + this.textInput.height / 2
-        // this.textInput.width
 
         if (!this.chatMode && !!currentPlayer) {
             //forward/backward
@@ -203,94 +180,51 @@ export class MarbleGameScene extends Scene {
         if (Input.Keyboard.JustDown(this.keys.SHIFT)) {
             player.inputQueue.push(KEY_ACTION.JUSTDOWN_SHIFT)
             this.room.send(0, KEY_ACTION.JUSTDOWN_SHIFT)
-            // player.speedMode = SPEED_MODE.RUN
         }
 
         if (Input.Keyboard.JustUp(this.keys.SHIFT)) {
             this.room.send(0, KEY_ACTION.JUSTUP_SHIFT)
             player.inputQueue.push(KEY_ACTION.JUSTUP_SHIFT)
-            // player.speedMode = SPEED_MODE.WALK
         }
 
         if (Input.Keyboard.JustDown(this.keys.FORWARD)) {
             this.room.send(0, KEY_ACTION.JUSTDOWN_FORWARD)
             player.inputQueue.push(KEY_ACTION.JUSTDOWN_FORWARD)
-            // player.speed = SPEED
         }
 
         if (Input.Keyboard.JustDown(this.keys.BACKWARD)) {
             this.room.send(0, KEY_ACTION.JUSTDOWN_BACKWARD)
             player.inputQueue.push(KEY_ACTION.JUSTDOWN_BACKWARD)
-            // player.speed = -SPEED
         }
 
         if (Input.Keyboard.JustUp(this.keys.FORWARD) && player.speed === SPEED) {
             this.room.send(0, KEY_ACTION.JUSTUP_FORWARD)
             player.inputQueue.push(KEY_ACTION.JUSTUP_FORWARD)
-            // if (this.keys.BACKWARD.isDown) {
-            //     player.speed = -SPEED
-            // }
-            // else {
-            //     player.speed = 0
-            // }
         }
         if (Input.Keyboard.JustUp(this.keys.BACKWARD) && player.speed === -SPEED) {
             this.room.send(0, KEY_ACTION.JUSTUP_BACKWARD)
             player.inputQueue.push(KEY_ACTION.JUSTUP_BACKWARD)
-            // if (this.keys.FORWARD.isDown) {
-            //     player.speed = SPEED
-            // }
-            // else {
-            //     player.speed = 0
-            // }
         }
 
         //left/right
         if (Input.Keyboard.JustDown(this.keys.LEFT)) {
             this.room.send(0, KEY_ACTION.JUSTDOWN_LEFT)
             player.inputQueue.push(KEY_ACTION.JUSTDOWN_LEFT)
-            // player.angularVelocity = -TURN_SPEED
         }
         if (Input.Keyboard.JustDown(this.keys.RIGHT)) {
             this.room.send(0, KEY_ACTION.JUSTDOWN_RIGHT)
             player.inputQueue.push(KEY_ACTION.JUSTDOWN_RIGHT)
-            // player.angularVelocity = TURN_SPEED
         }
 
         if (Input.Keyboard.JustUp(this.keys.LEFT)) {
             this.room.send(0, KEY_ACTION.JUSTUP_LEFT)
             player.inputQueue.push(KEY_ACTION.JUSTUP_LEFT)
-            // if (this.keys.RIGHT.isDown) {
-            //     player.angularVelocity = TURN_SPEED
-            // }
-            // else {
-            //     player.angularVelocity = 0
-            // }
         }
         if (Input.Keyboard.JustUp(this.keys.RIGHT)) {
             this.room.send(0, KEY_ACTION.JUSTUP_RIGHT)
             player.inputQueue.push(KEY_ACTION.JUSTUP_RIGHT)
-            // if (this.keys.LEFT.isDown) {
-            //     player.angularVelocity = -TURN_SPEED
-            // }
-            // else {
-            //     player.angularVelocity = 0
-            // }
         }
-
-        // Body.setAngularVelocity(player.body, player.angularVelocity)
-        // const velocity = getVelocity(player.body.angle, player.speed * player.speedMode)
-        // Body.setVelocity(player.body, velocity)
-
-        // if (player.body.speed <= .01 && player.body.angularSpeed <= .01) {
-        //     Body.setStatic(player.body, true)
-        // }
-        // else {
-        //     Body.setStatic(player.body, false)
-        // }
     }
-
-
 
     private onRemove(sessionId: string) {
         const entity = this.playerSprites[sessionId]
@@ -317,37 +251,29 @@ export class MarbleGameScene extends Scene {
                 frictionAir: .00,
                 frictionStatic: .0,isStatic:true
             })
-            // playerSprite.setFixedRotation()
             playerSprite.play('marble-roll', true).anims.pause()
-
 
             playerSprite.setExistingBody(compoundBody, true)
 
             player.body = playerSprite.body as unknown as Body
 
             this.add.existing(playerSprite)
-
         }
 
         playerSprite.on('pointerdown', () => {
             console.log('click', player.id)
         })
 
+        Player.move(player)
         const [mb] = this.matter.getMatterBodies([playerSprite])
-        //console.log(mb.id)
         this.matter.body.setAngle(mb, player.angle, true)
         this.matter.body.setAngularVelocity(mb, player.angularVelocity)
-        //this.matter.body.setVelocity(mb, getVelocity(entity.rotation, player.speed))
-        // this.matter.body.setInertia(mb, Infinity)
-        // mb.restitution = 0
-        //this.matter.body.setStatic(mb,true)
         this.playerSprites[sessionId] = playerSprite
 
         //is current player
         if (sessionId === this.room.sessionId) {
             this.currentPlayerSprite = playerSprite
             this.cameras.main.startFollow(playerSprite, true, .7, .7)
-            // this.currentPlayer.play('marble-roll',true)
         }
 
         player.messages.onAdd((item) => {
@@ -362,7 +288,6 @@ export class MarbleGameScene extends Scene {
 
                 }
                 this.matter.body.setVelocity(mb, player.velocity)
-                // console.log(mb.velocity)
 
                 if (mb.speed > 0) {
                     // playerSprite.play('marble-roll', true)
@@ -380,8 +305,6 @@ export class MarbleGameScene extends Scene {
 
         player.position.onChange(() => {
             if (player.position.x !== undefined && player.position.y != undefined) {
-                //console.log('xxxxx')
-                //console.log('speed', player.speed)
                 this.matter.body.setPosition(mb, { x: player.position.x, y: player.position.y }, false)
             }
 
@@ -390,22 +313,14 @@ export class MarbleGameScene extends Scene {
         })
 
         player.onChange(() => {
-            //console.log('player.onchange', player.toJSON())
-            // this.matter.body.setStatic(mb, true)
             this.world.setStatic(playerSprite.body as unknown as Body, player)
-            // this.matter.body.setStatic(mb, false)
 
             if (player.angle !== undefined) {
-                //console.log('angle', player.angle)
                 this.matter.body.setAngle(mb, player.angle, true)
             }
             if (player.angularVelocity !== undefined) {
-                //console.log('angularVelocity', player.angularVelocity)
                 if (player.angularVelocity !== 0) {
-                    // this.matter.body.setStatic(mb, false)
                     this.world.setStatic(playerSprite.body as unknown as Body, player)
-                    // this.matter.body.setStatic(mb, false)
-
                 }
                 this.matter.body.setAngularVelocity(mb, player.angularVelocity)
             }
@@ -417,7 +332,6 @@ export class MarbleGameScene extends Scene {
         this.add.existing(new ChatBubble({
             scene: this, message: message,
             player: player
-
         }))
     }
 
@@ -435,7 +349,6 @@ export class MarbleGameScene extends Scene {
             this.room = await client.joinOrCreate(this.roomName, {})
 
             this.room.state.onChange(() => {
-                //show the turn number somewhere
                 this.registry.set('turnNumber', this.room.state.turnNumber)
             })
 
