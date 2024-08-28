@@ -5,6 +5,7 @@ import { BootScene } from '@/client/scenes/BootScene';
 import { MarbleGameScene } from '@/client/scenes/MarbleGameScene';
 import { HudScene } from '@/client/scenes/HudScene';
 import { TestScene } from '@/client/scenes/TestScene';
+import { AuthTestScene } from './scenes/AuthTestScene';
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
@@ -21,12 +22,11 @@ const config: Types.Core.GameConfig = {
     scene: [
         BootScene,
         Preloader,
-        // MainMenu,
         MainGame,
-        // GameOver,
         MarbleGameScene,
         HudScene,
         TestScene,
+        AuthTestScene
     ],
     physics: {
         default: "matter",
