@@ -3,7 +3,7 @@ import config, { listen } from "@colyseus/tools"
 import { auth, JWT } from "@colyseus/auth"
 import { monitor } from "@colyseus/monitor"
 import { MarbleGameRoom } from "@/server/rooms/MarbleGameRoom"
-// import "@/console.js"
+import "@/console.js"
 
 let gameServerRef: Server
 
@@ -14,9 +14,10 @@ auth.oauth.addProvider('google', {
 })
 
 auth.oauth.onCallback(async (data, provider) => {
-    console.log('profile', data.profile)
+    // console.log('onCallback', data.profile)
+    // console.log('data.upgradingToken',data.upgradingToken)
     //TODO persistance
-      return data.profile.email
+    return data.profile.email
 })
 
 auth.settings.onGenerateToken = function (userdata) {

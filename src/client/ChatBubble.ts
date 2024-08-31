@@ -1,9 +1,9 @@
 import { GameObjects, Scene, Types } from "phaser"
 import { Message } from "@/Message"
-import { Player } from "@/Player"
+import { Character } from "@/Character"
 
 export default class ChatBubble extends GameObjects.Text {
-    player: Player
+    character: Character
     startTime
 
     constructor(data: {
@@ -12,13 +12,13 @@ export default class ChatBubble extends GameObjects.Text {
 
         style?: Types.GameObjects.Text.TextStyle,
 
-        player: Player
+        character: Character
     }) {
         // console.log('chatbubble constructor')
-        const { scene, message: { time, text }, player, player: { position: { x, y } } } = data
+        const { scene, message: { time, text }, character, character: { position: { x, y } } } = data
         const style = { color: "black" }
         super(scene, x, y - 32, text, style)
-        this.player = player
+        this.character = character
         this.startTime = time
     }
 
@@ -28,7 +28,7 @@ export default class ChatBubble extends GameObjects.Text {
             // console.log('destroy')
             this.destroy(true)
         }
-        this.setY(this.player.position.y - (now - this.startTime) / 60 - this.height - 10)
-        this.setX(this.player.position.x - this.width / 2)
+        this.setY(this.character.position.y - (now - this.startTime) / 60 - this.height - 10)
+        this.setX(this.character.position.x - this.width / 2)
     }
 }

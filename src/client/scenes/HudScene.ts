@@ -29,6 +29,8 @@ export class HudScene extends Scene {
         client.auth.onChange((authData) => {
             if (!!authData.user) {
                 //logged in
+                this.registry.set('currentPlayer.email',authData.user)
+                this.registry.events.emit('currentPlayer.email',authData.user)
                 //hide the log in button
                 this.login.removeFromDisplayList()
                 //show and set the email button
@@ -61,7 +63,7 @@ export class HudScene extends Scene {
         this.login = this.add.text(10, 10, "LOG IN").setInteractive().on('pointerdown', async () => {
             try {
                 await client.auth.signInWithProvider('google')
-                         } catch (e) {
+            } catch (e) {
                 console.error(e)
             }
         })
