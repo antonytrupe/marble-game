@@ -1,13 +1,13 @@
 import { Body } from "matter-js"
 import { Input, Physics, Scene } from "phaser"
 import { getVelocity } from "@/functions"
-import { Player } from "@/Player"
-import { Keys } from "@/Keys"
+ import { Keys } from "@/Keys"
 import { SPEED, TURN_SPEED } from "@/CONSTANTS"
+import { Character } from "@/Character"
  
 export class TestScene extends Scene {
     keys: Keys
-    player: Player = new Player({ x: 200, y: 250 })
+    player: Character = new Character({ x: 200, y: 250 })
     playerSprite: Physics.Matter.Sprite
 
     constructor() {

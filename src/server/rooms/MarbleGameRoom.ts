@@ -34,6 +34,10 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     this.state.mapWidth = 800
     this.state.mapHeight = 600
 
+    this.onMessage('auth', () => {
+      console.log('auth change')
+    })
+
     this.onMessage(0, (client, input: KEY_ACTION) => {
       //handle player input
 
@@ -120,69 +124,75 @@ export class MarbleGameRoom extends Room<WorldSchema> {
 
   static async onAuth(token: string, request: any) {
     // console.log('onAuth', token)
+    if (!token) {
+      return true
+    }
     // client.auth.token = token
     // console.log(await JWT.verify(token))
     const email = await JWT.verify(token)
-    const newLocal = email || true
+    // const newLocal = email || true
     // return await JWT.verify(token) || true
-    // console.log('newLocal',newLocal)
-    return newLocal
+    // console.log('email', email)
+    return email
   }
 
-  onJoin(client: Client, options: any, email?: string) {
-    console.log(client.sessionId, email, "joined ")
-    if (!email) {
+  onJoin(client: Client, options: any, email?: string | boolean) {
+    console.log('onJoin', client.sessionId, email)
+    if (typeof email != 'string' && email) {
       console.log('anonymous user')
       return
     }
 
-    // console.log('client.auth', client.auth)
-    let player = this.getPlayer(email)
-    // console.log(player)
-    if (!player) {
-      // console.log('made a new player', email)
-      player = new Player()
-      player.email = email
-      player.id = uuidv4()
-    }
-    this.state.playersByEmail.set(email, player)
+    if (typeof email == 'string') {
 
-    if (player.sessionId != client.sessionId) {
-      if (player.sessionId) {
-        this.state.playersBySessionId.delete(player.sessionId)
+      // console.log('client.auth', client.auth)
+      let player = this.getPlayer(email)
+      // console.log(player)
+      if (!player) {
+        // console.log('made a new player', email)
+        player = new Player()
+        player.email = email
+        player.id = uuidv4()
       }
-      player.sessionId = client.sessionId
-      this.state.playersBySessionId.set(client.sessionId, player)
+      this.state.playersByEmail.set(email, player)
+
+      if (player.sessionId != client.sessionId) {
+        if (player.sessionId) {
+          this.state.playersBySessionId.delete(player.sessionId)
+        }
+        player.sessionId = client.sessionId
+        this.state.playersBySessionId.set(client.sessionId, player)
+      }
+
+      //character stuff
+      let character = this.getCharacter(player.characterId)
+      if (!character) {
+        // console.log('making a new character')
+        const x = Math.random() * this.state.mapWidth
+        const y = Math.random() * this.state.mapHeight
+        character = new Character({ x, y })
+        character.id = uuidv4()
+        character.playerId = player.id
+        player.characterId = character.id
+
+        character.angle = 0
+        character.angularVelocity = 0
+        this.state.characters.set(character.id, character)
+
+        const circle = Bodies.circle(character.position.x, character.position.y, 30,
+          {
+            friction: 0,
+            frictionAir: .0,
+            frictionStatic: .0
+          })
+
+        Body.setStatic(circle, true)
+
+        character.body = circle
+        Composite.add(this.engine.world, [circle])
+      }
+      // console.log('characters.size', this.state.characters.size)
     }
-
-    //character stuff
-    let character = this.getCharacter(player.characterId)
-    if (!character) {
-      // console.log('making a new character')
-      const x = Math.random() * this.state.mapWidth
-      const y = Math.random() * this.state.mapHeight
-      character = new Character({ x, y })
-      character.id = uuidv4()
-      character.playerId = player.id
-      player.characterId = character.id
-
-      character.angle = 0
-      character.angularVelocity = 0
-      this.state.characters.set(character.id, character)
-
-      const circle = Bodies.circle(character.position.x, character.position.y, 30,
-        {
-          friction: 0,
-          frictionAir: .0,
-          frictionStatic: .0
-        })
-
-      Body.setStatic(circle, true)
-
-      character.body = circle
-      Composite.add(this.engine.world, [circle])
-    }
-    // console.log('characters.size', this.state.characters.size)
   }
 
   private getPlayer(email: string) {

@@ -12,16 +12,15 @@ import { BACKEND_URL } from "@/client/BACKEND_URL"
 import { Character } from "@/Character"
 
 export class MarbleGameScene extends Scene {
-
+    client: Client
     room: Room<WorldSchema>
+    roomName: string
 
     currentPlayerSprite: Physics.Matter.Sprite
     currentPlayer: Player
     currentCharacter: Character
 
     keys: Keys
-    // world: World = new World()
-    roomName: string
 
     textInput: GameObjects.DOMElement
 
@@ -47,17 +46,15 @@ export class MarbleGameScene extends Scene {
     }
 
     init({ roomName }: { roomName: string }): void {
-        console.log('MarbleGameScene init')
+        // console.log('MarbleGameScene init')
         this.roomName = roomName
+        this.scene.launch('HUD')
     }
 
     async create() {
-        console.log('MarbleGameScene create')
+        // console.log('MarbleGameScene create')
 
-        this.registry.events.addListener('currentPlayer.email', () => {
-            // console.log('logged in')
-            this.connect()
-        })
+        this.connect()
 
         Character.create(this)
 
@@ -115,9 +112,6 @@ export class MarbleGameScene extends Scene {
             }
         })
 
-        //connect with the room
-        // await this.connect()
-        this.scene.launch('HUD')
         this.cameras.main.setZoom(1)
         //this.cameras.main.useBounds = false
         //this.cameras.main.setBounds(0, 0, 800, 600)
@@ -382,10 +376,44 @@ export class MarbleGameScene extends Scene {
             .setStyle({ color: "#ff0000" })
             .setPadding(4)
 
-        const client = new Client(BACKEND_URL)
+
+        this.registry.events.on('auth.logout', async () => {
+            await this.client.auth.signOut()
+        })
+
+        this.registry.events.on('auth.login', async () => {
+            await this.client.auth.signInWithProvider('google')
+        })
+
+        this.client = new Client(BACKEND_URL)
+        // client.auth.onChange(()=>{
+        //     console.log('marblegamescene auth onchange')
+        // })
+
+        this.client.auth.onChange((authData) => {
+            console.log('auth onchange', authData.user)
+            if (!!authData.user) {
+                console.log(1)
+                //logged in
+                // this.registry.set('currentPlayer.email',authData.user)
+                this.registry.events.emit('auth.email', authData.user)
+
+            }
+            else {
+                console.log(2)
+                this.registry.events.emit('auth.email', authData.user)
+            }
+        })
 
         try {
-            this.room = await client.joinOrCreate(this.roomName, {})
+            this.room = await this.client.joinOrCreate(this.roomName, {})
+
+            this.registry.events.addListener('auth', () => {
+                console.log('marblegamescene auth event')
+
+                this.room.send('auth')
+            })
+
 
             this.room.state.onChange(() => {
                 this.registry.set('turnNumber', this.room.state.turnNumber)
