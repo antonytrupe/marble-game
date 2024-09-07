@@ -3,6 +3,7 @@ export default ({
 }: {
   children: React.ReactNode
 }) => {
+  console.log('layout.tsx')
   return (
     <html lang="en">
       <body>

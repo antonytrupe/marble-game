@@ -8,17 +8,18 @@ import { KEY_ACTION, Keys } from "@/Keys"
 import { SPEED } from "@/CONSTANTS"
 import { respondToVisibility } from "@/client/respondToVisibility"
 import ChatBubble from "@/client/ChatBubble"
-import { BACKEND_URL } from "@/client/BACKEND_URL"
 import { Character } from "@/Character"
+import { BACKEND_URL } from "../BACKEND_URL"
 
 export class MarbleGameScene extends Scene {
-    client: Client
-    room: Room<WorldSchema>
+    static key = "MarbleGameScene"
+    client?: Client
+    room?: Room<WorldSchema>
     roomName: string
 
-    currentPlayerSprite: Physics.Matter.Sprite
-    currentPlayer: Player
-    currentCharacter: Character
+    // currentPlayerSprite: Physics.Matter.Sprite
+    currentPlayer?: Player
+    // currentCharacter: Character
 
     keys: Keys
 
@@ -28,9 +29,9 @@ export class MarbleGameScene extends Scene {
     scaleSprite: GameObjects.TileSprite
 
     constructor() {
-        // console.log('scene constructor')
+        // console.log('MarbleGameScene constructor')
         super({
-            key: 'MarbleGameScene',
+            key: MarbleGameScene.key,
             physics: {
                 default: "matter"
             }
@@ -39,6 +40,7 @@ export class MarbleGameScene extends Scene {
 
     preload() {
         // console.log('MarbleGameScene preload')
+        this.cameras.main.setBackgroundColor(0xf0f0f0)
         this.load.image('background')
         this.load.html("input", "input.html")
         Character.preload(this)
@@ -48,11 +50,18 @@ export class MarbleGameScene extends Scene {
     init({ roomName }: { roomName: string }): void {
         // console.log('MarbleGameScene init')
         this.roomName = roomName
-        this.scene.launch('HUD')
+        // this.scene.launch(HudScene.key)
     }
 
     async create() {
         // console.log('MarbleGameScene create')
+
+        this.registry.events.on('auth.email', (email: any) => {
+            // console.log('HudScene auth.email', email)
+            if (!email) {
+                this.scene.stop()
+            }
+        })
 
         this.connect()
 
@@ -68,7 +77,9 @@ export class MarbleGameScene extends Scene {
         this.add.tileSprite(512, 1024, 512, 512, 'background')//.setOrigin(0)
         this.add.tileSprite(1024, 1024, 512, 512, 'background')//.setOrigin(0)
 
-        this.scaleSprite = this.add.tileSprite(0, 0, 306, 60, 'scale').setOrigin(0, 0).setScrollFactor(1).setScale(1, 1)
+        this.scaleSprite = this.add.tileSprite(0, 0, 306, 60, 'scale').setOrigin(0, 0)
+            //.setScrollFactor(1)
+            .setScale(1, 1)
 
         this.textInput = this.add.dom(100, 100).createFromCache("input").setVisible(false)
 
@@ -120,14 +131,9 @@ export class MarbleGameScene extends Scene {
     async update(time: number, delta: number): Promise<void> {
         // console.log('update')
 
-        // if (!this.room && this.registry.get('currentPlayer.email')) {
-
-        //     await this.connect()
-        // }
-
-        if (!this.currentPlayerSprite) { return }
-
-        // const currentPlayer: Player | undefined = this.room.state.players.get(this.room.sessionId)
+        if (!this.room) {
+            return
+        }
 
         if (Phaser.Input.Keyboard.JustDown(this.keys.ENTER)) {
             this.chatMode = !this.chatMode
@@ -140,14 +146,26 @@ export class MarbleGameScene extends Scene {
             }
         }
 
-        this.textInput.setVisible(this.chatMode)
-        this.textInput.x = this.currentPlayerSprite.x * this.cameras.main.zoom - this.textInput.width / 2 + this.textInput.width / 2
-        this.textInput.y = this.currentPlayerSprite.y * this.cameras.main.zoom + this.currentPlayerSprite.height / 2 + this.textInput.height / 2
+        if (!this.currentPlayer) {
+            return
+        }
 
-        if (!this.chatMode && !!this.currentCharacter) {
+        const character = WorldSchema.getCharacter(this.room.state, this.currentPlayer.characterId)
+        if (character?.body) {
+            this.textInput.setVisible(this.chatMode)
+            this.textInput.x = character.body.position.x * this.cameras.main.zoom - this.textInput.width / 2 + this.textInput.width / 2
+            this.textInput.y = character.body.position.y * this.cameras.main.zoom + 60 / 2 + this.textInput.height / 2
+        }
+
+        if (!this.chatMode && !!this.currentPlayer?.characterId) {
+            // console.log(this.currentPlayer?.characterId)
             //forward/backward
-            this.keyInputs(this.currentCharacter)
-            Character.move(this.currentCharacter)
+            const character = WorldSchema.getCharacter(this.room.state, this.currentPlayer.characterId)
+            if (!!character) {
+                // console.log(character.body.id)
+                this.keyInputs(character)
+                Character.move(character)
+            }
         }
 
         //this.localRef.x = this.currentPlayer.x
@@ -180,6 +198,9 @@ export class MarbleGameScene extends Scene {
     private keyInputs(character: Character) {
         if (!character.inputQueue) {
             character.inputQueue = []
+        }
+        if (!this.room) {
+            return
         }
 
         if (Input.Keyboard.JustDown(this.keys.SHIFT)) {
@@ -239,18 +260,22 @@ export class MarbleGameScene extends Scene {
     //     }
     // }
 
-    private addPlayer(player: Player, sessionId: string) {
-        // console.log(sessionId, JSON.stringify(player), 'joined marblegame')
-        // console.log('this.room.sessionId', this.room.sessionId)
-        if (sessionId == this.room.sessionId) {
-            // console.log('setting current player')
-            this.currentPlayer = player
-            // const c = this.room.state.characters.get(this.currentPlayer.characterId)
-            // if (c) {
-            //     console.log('setting currentCharacter')
-            //     this.currentCharacter = c
-            // }
-        }
+    private addPlayer(player: Player, email: string) {
+
+        //TODO watch for players to change their sessionId
+        player.onChange(() => {
+            console.log('player change')
+            if (!this.room) {
+                return
+            }
+            if (player.sessionId == this.room.sessionId) {
+                this.currentPlayer = player
+                const character = WorldSchema.getCharacter(this.room.state, player.characterId)
+                if (!!character) {
+                    // this.currentCharacter = character
+                }
+            }
+        })
     }
 
     private addCharacter(character: Character) {
@@ -279,6 +304,7 @@ export class MarbleGameScene extends Scene {
             playerSprite.setExistingBody(compoundBody, true)
 
             character.body = playerSprite.body as unknown as Body
+            console.log(character.body.id)
 
             this.add.existing(playerSprite)
         }
@@ -296,8 +322,8 @@ export class MarbleGameScene extends Scene {
         // console.log('this.currentPlayer', JSON.stringify(this.currentPlayer))
         // console.log('character.id', character.id)
         if (this.currentPlayer?.characterId == character.id) {
-            this.currentPlayerSprite = playerSprite
-            this.currentCharacter = character
+            // this.currentPlayerSprite = playerSprite
+            // this.currentCharacter = character
             this.cameras.main.startFollow(playerSprite, true, .7, .7)
         }
         character.messages.onAdd((item) => {
@@ -338,6 +364,7 @@ export class MarbleGameScene extends Scene {
         })
 
         character.onChange(() => {
+            // console.log(character.body.id)
             Character.move(character)
 
             if (character.angle !== undefined) {
@@ -364,8 +391,12 @@ export class MarbleGameScene extends Scene {
         }))
     }
 
-    async disconnect() {
-        await this.room.leave(true)
+    // async disconnect() {
+    //     await this.room.leave(true)
+    // }
+
+    stateChangeHandlers() {
+
     }
 
     async connect() {
@@ -376,60 +407,60 @@ export class MarbleGameScene extends Scene {
             .setStyle({ color: "#ff0000" })
             .setPadding(4)
 
-
-        this.registry.events.on('auth.logout', async () => {
-            await this.client.auth.signOut()
-        })
-
-        this.registry.events.on('auth.login', async () => {
-            await this.client.auth.signInWithProvider('google')
-        })
+        // this.registry.events.destroy()
 
         this.client = new Client(BACKEND_URL)
-        // client.auth.onChange(()=>{
-        //     console.log('marblegamescene auth onchange')
-        // })
-
-        this.client.auth.onChange((authData) => {
-            console.log('auth onchange', authData.user)
-            if (!!authData.user) {
-                console.log(1)
-                //logged in
-                // this.registry.set('currentPlayer.email',authData.user)
-                this.registry.events.emit('auth.email', authData.user)
-
-            }
-            else {
-                console.log(2)
-                this.registry.events.emit('auth.email', authData.user)
-            }
-        })
 
         try {
             this.room = await this.client.joinOrCreate(this.roomName, {})
 
-            this.registry.events.addListener('auth', () => {
-                console.log('marblegamescene auth event')
-
-                this.room.send('auth')
+            this.client.auth.onChange(async (authData: { user: string; token: string }) => {
+                // console.log('auth onchange', authData)
+                if (!!authData.user) {
+                    // console.log('logged in',authData)
+                    //logged in
+                    this.registry.events.emit('auth.email', authData.user)
+                    if (this.room && this.client) {
+                        this.client.auth.token = authData.token
+                        // console.log(this.client.auth.token)
+                        this.room.send('auth', 'login')
+                        // this.room.leave(false)
+                        // this.room = await this.client.joinOrCreate(this.roomName)
+                    }
+                }
+                else {
+                    console.log(authData)
+                    // console.log(this.client.auth.token)
+                    this.registry.events.emit('auth.email', authData.user)
+                    if (this.room && this.client) {
+                        this.client.auth.token = ''
+                        console.log(this.client.auth.token)
+                        this.room.send('auth', 'logout')
+                        // this.room.leave(false)
+                        // this.room = await this.client.joinOrCreate(this.roomName)
+                    }
+                }
             })
-
 
             this.room.state.onChange(() => {
-                this.registry.set('turnNumber', this.room.state.turnNumber)
+                console.log('room.state.onChange')
+                if (this.room) {
+                    this.registry.set('turnNumber', this.room.state.turnNumber)
+                }
             })
 
-            this.room.state.playersBySessionId.onAdd((player, sessionId: string) => {
-                this.addPlayer(player, sessionId)
+            this.room.state.playersByEmail.onAdd((player: Player, email: string) => {
+                this.addPlayer(player, email)
             })
 
-            this.room.state.characters.onAdd((character, characterId: string) => {
+            this.room.state.characters.onAdd((character: Character, characterId: string) => {
                 // console.log('new character', characterId)
                 this.addCharacter(character)
             })
 
             //remove local reference when entity is removed from the server
-            this.room.state.playersBySessionId.onRemove((player, sessionId) => {
+            this.room.state.playersBySessionId.onRemove((player: Player, sessionId: string) => {
+
                 // this.onRemove(sessionId)
             })
             connectionStatusText.destroy()

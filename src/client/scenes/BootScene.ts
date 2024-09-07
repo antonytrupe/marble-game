@@ -1,102 +1,108 @@
-import { Client, RoomAvailable } from "colyseus.js"
-import { GameObjects, Scene, Types } from "phaser"
-import { BACKEND_URL } from "@/client/BACKEND_URL"
+import { Scene } from "phaser"
+import { Client } from "colyseus.js"
+import { BACKEND_URL } from "../BACKEND_URL"
 
 export class BootScene extends Scene {
 
-    worlds: RoomAvailable[] = []
-    worldsGroup: GameObjects.Group
+    client: Client
 
     constructor() {
-        console.log('BootScene constructor')
-        super({ key: "selector", active: true })
+        // console.log('BootScene constructor')
+        super({ key: "BootScene", active: true })
     }
 
     preload() {
-        console.log('BootScene preload')
+        // console.log('BootScene preload')
         // update menu background color
-        this.cameras.main.setBackgroundColor(0xf0f0f0)
-        this.worldsGroup = this.add.group()
+        // this.cameras.main.setBackgroundColor(0xf0f0f0)
+    }
+
+    init() {
+        // console.log('BootScene init')
     }
 
     async create() {
-        console.log('BootScene create')
-        // automatically navigate to hash scene if provided
+        // console.log('BootScene create')
+
+        //console.log(window.location.hash)
+        //console.log(window.location.pathname)
+        //automatically navigate to hash scene if provided
         if (window.location.hash) {
             // console.log('hash')
             const hashParts = window.location.hash.substring(1).split('|')
             // console.log(hashParts)
             this.runScene(hashParts[0], hashParts[1])
-            return
         }
 
-        //connect with the room
-        await this.connect()
+        this.client = this.createClient()
+
+        this.client.auth.onChange((authData: { user: string; token: string }) => {
+            // console.log('BootScene client.auth.onChange', authData)
+            this.registry.set('auth.email', authData.user)
+            this.registry.events.emit('auth.email', authData.user)
+        })
+
+        this.registry.events.on('path', async (sceneName: string, roomName: string) => {
+            // console.log(sceneName, roomName)
+            // window.location.hash = `${sceneName}|${roomName}`
+            this.runScene(sceneName, roomName)
+        })
+
+        this.registry.events.on('auth.logout', async () => {
+            console.log('log out')
+            if (this.client) {
+                window.location.hash = ''
+                await this.client.auth.signOut()
+            }
+        })
+
+        this.registry.events.on('auth.login', async () => {
+            if (this.client) {
+                await this.client.auth.signInWithProvider('google')
+            }
+        })
+
+        //connect with the lobby
+        await this.joinLobby()
     }
 
-    async connect() {
-        console.log('BootScene connect')
-        const client = new Client(BACKEND_URL)
+    createClient() {
+        return new Client(BACKEND_URL)
+    }
 
-        const lobby = await client.joinOrCreate("lobby")
+    async joinLobby() {
+        // console.log('BootScene connect')
+
+        const lobby = await this.client.joinOrCreate("lobby")
 
         // let allRooms: any[] = []
 
         lobby.onMessage("rooms", (rooms) => {
-            this.worlds = rooms
+            this.registry.events.emit("rooms", rooms)
         })
 
         lobby.onMessage("+", ([roomId, room]) => {
-            const roomIndex = this.worlds.findIndex((room) => room.roomId === roomId)
-            if (roomIndex !== -1) {
-                this.worlds[roomIndex] = room
-
-            } else {
-                this.worlds.push(room)
-            }
+            this.registry.events.emit("+", roomId, room)
         })
 
         lobby.onMessage("-", (roomId) => {
-            this.worlds = this.worlds.filter((room) => room.roomId !== roomId)
+            this.registry.events.emit("-", roomId)
         })
+        return lobby
     }
 
     update() {
         // console.log('update')
 
-        this.worldsGroup.clear(true)
-
-        const textStyle: Types.GameObjects.Text.TextStyle = {
-            color: "#ff0000",
-            fontSize: "32px",
-            fontFamily: "Arial"
-        }
-
-        this.worlds.forEach((room, i) => {
-            //TODO keep track of what rooms we've already added
-            const description = room.metadata.description
-            const sceneName = room.metadata.sceneName
-            const roomName = room.name
-
-            const t = this.make.text({ x: 130, y: 150 + 70 * i, text: `${description}`, style: textStyle })
-                .setInteractive()
-                .setPadding(6)
-                .on("pointerdown", () => {
-                    console.log(sceneName, roomName)
-                    this.runScene(sceneName, roomName)
-                })
-
-            this.worldsGroup.add(t)
-        })
     }
 
     runScene(sceneName: string, roomName: string) {
-        // console.log('run scene', sceneName, roomName)
-        // this.game.scene.switch("selector", key)
-        this.scene.stop()
+        console.log('runScene', sceneName, roomName)
+        window.location.hash = `${sceneName}|${roomName}`
+        // this.scene.stop()
         // console.log(this.game.scene)
-        this.scene.run(sceneName, { roomName })
-        window.location.hash = sceneName + (!!roomName ? '|' + roomName : '')
+        this.scene.launch(sceneName, { roomName })
+        // window.location.hash = sceneName + (!!roomName ? '|' + roomName : '')
     }
 
 }

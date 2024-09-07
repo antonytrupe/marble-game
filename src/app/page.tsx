@@ -16,6 +16,7 @@ export const viewport: Viewport = {
 }
 
 export default () => {
+    console.log('page.tsx')
     return (
         <AppWithoutSSR />
     )

@@ -45,81 +45,82 @@ export class Character extends Schema {
     scene.anims.create({ key: 'marble-roll', frameRate: 10, frames: scene.anims.generateFrameNames('marble', { start: 0, end: 11, prefix: '', suffix: '.png' }), repeat: -1 })
   }
 
-  static move(player: Character) {
+  static move(character: Character) {
     let input: KEY_ACTION | undefined
-    while (input = player.inputQueue?.shift()) {
+    while (input = character.inputQueue?.shift()) {
       // console.log(player.id, input)
 
       switch (input) {
         case KEY_ACTION.JUSTDOWN_SHIFT:
-          player.speedMode = SPEED_MODE.RUN
+          character.speedMode = SPEED_MODE.RUN
           break
         case KEY_ACTION.JUSTUP_SHIFT:
-          player.speedMode = SPEED_MODE.WALK
+          character.speedMode = SPEED_MODE.WALK
           break
         case KEY_ACTION.JUSTDOWN_FORWARD:
-          player.speed = SPEED
-          player.forward = true
+          character.speed = SPEED
+          character.forward = true
           break
         case KEY_ACTION.JUSTUP_FORWARD:
-          player.forward = false
-          if (player.backward) {
-            player.speed = -SPEED
+          character.forward = false
+          if (character.backward) {
+            character.speed = -SPEED
           }
           else {
-            player.speed = 0
+            character.speed = 0
           }
           break
         case KEY_ACTION.JUSTDOWN_BACKWARD:
-          player.speed = -SPEED
-          player.backward = true
+          character.speed = -SPEED
+          character.backward = true
           break
         case KEY_ACTION.JUSTUP_BACKWARD:
-          player.backward = false
-          if (player.forward) {
-            player.speed = SPEED
+          character.backward = false
+          if (character.forward) {
+            character.speed = SPEED
           }
           else {
-            player.speed = 0
+            character.speed = 0
           }
           break
         case KEY_ACTION.JUSTDOWN_RIGHT:
-          player.right = true
-          player.angularVelocity = TURN_SPEED
+          character.right = true
+          character.angularVelocity = TURN_SPEED
           break
         case KEY_ACTION.JUSTUP_RIGHT:
-          player.right = false
-          if (player.left) {
-            player.angularVelocity = -TURN_SPEED
+          character.right = false
+          if (character.left) {
+            character.angularVelocity = -TURN_SPEED
           }
           else {
-            player.angularVelocity = 0
+            character.angularVelocity = 0
           }
           break
         case KEY_ACTION.JUSTDOWN_LEFT:
-          player.left = true
-          player.angularVelocity = -TURN_SPEED
+          character.left = true
+          character.angularVelocity = -TURN_SPEED
           break
         case KEY_ACTION.JUSTUP_LEFT:
-          player.left = false
-          if (player.right) {
-            player.angularVelocity = TURN_SPEED
+          character.left = false
+          if (character.right) {
+            character.angularVelocity = TURN_SPEED
           }
           else {
-            player.angularVelocity = 0
+            character.angularVelocity = 0
           }
           break
       }
     }
 
-    Body.setAngularVelocity(player.body, player.angularVelocity)
-    const velocity = getVelocity(player.body.angle, player.speed * player.speedMode)
-    Body.setVelocity(player.body, velocity)
-    if (player.body.speed <= .01 && player.body.angularSpeed <= .01) {
-      Body.setStatic(player.body, true)
+    // console.log(JSON.stringify(character.body))
+    Body.setAngularVelocity(character.body, character.angularVelocity)
+    const velocity = getVelocity(character.body.angle, character.speed * character.speedMode)
+    Body.setVelocity(character.body, velocity)
+    if (character.body.speed <= .01 && character.body.angularSpeed <= .01) {
+      Body.setStatic(character.body, true)
     }
     else {
-      Body.setStatic(player.body, false)
+      Body.setStatic(character.body, false)
     }
   }
 }

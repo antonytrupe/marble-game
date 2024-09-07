@@ -34,8 +34,24 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     this.state.mapWidth = 800
     this.state.mapHeight = 600
 
-    this.onMessage('auth', () => {
+    this.onMessage('auth', async (client,f) => {
       console.log('auth change')
+      const email = client.auth
+      console.log(f,email)
+      console.log(client.userData)
+
+      // console.log(email)
+      if (!!email) {
+        const player = this.state.playersByEmail.get(email)
+        if (!!player) {
+          //delete old sessionid reference
+          if (!!player.sessionId) {
+            this.state.playersBySessionId.delete(player.sessionId)
+          }
+          player.sessionId = client.sessionId
+          this.state.playersBySessionId.set(player.sessionId, player)
+        }
+      }
     })
 
     this.onMessage(0, (client, input: KEY_ACTION) => {
@@ -61,18 +77,14 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     //let elapsedTime = 0
     this.setSimulationInterval((deltaTime) => this.update(deltaTime))
   }
+
   getCharacterBySessionId(sessionId: string) {
     const player = this.state.playersBySessionId.get(sessionId)
     let character: Character | undefined
     if (player?.characterId) {
       // console.log('found player')
-      character = this.getCharacter(player?.characterId)
+      character = WorldSchema.getCharacter(this.state, player?.characterId)
     }
-    return character
-  }
-
-  private getCharacter(characterId: string): Character | undefined {
-    const character = this.state.characters.get(characterId)
     return character
   }
 
@@ -81,7 +93,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     //handle player input
     const player = this.getPlayerBySession(client.sessionId)
     if (player?.characterId) {
-      const character = this.getCharacter(player?.characterId)
+      const character = WorldSchema.getCharacter(this.state, player?.characterId)
       character?.messages.push(new Message(input))
     }
   }
@@ -123,7 +135,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
   }
 
   static async onAuth(token: string, request: any) {
-    // console.log('onAuth', token)
+    console.log('onAuth', token)
     if (!token) {
       return true
     }
@@ -138,6 +150,8 @@ export class MarbleGameRoom extends Room<WorldSchema> {
 
   onJoin(client: Client, options: any, email?: string | boolean) {
     console.log('onJoin', client.sessionId, email)
+    
+
     if (typeof email != 'string' && email) {
       console.log('anonymous user')
       return
@@ -154,8 +168,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
         player.email = email
         player.id = uuidv4()
       }
-      this.state.playersByEmail.set(email, player)
-
+      
       if (player.sessionId != client.sessionId) {
         if (player.sessionId) {
           this.state.playersBySessionId.delete(player.sessionId)
@@ -164,8 +177,10 @@ export class MarbleGameRoom extends Room<WorldSchema> {
         this.state.playersBySessionId.set(client.sessionId, player)
       }
 
+      this.state.playersByEmail.set(email, player)
+
       //character stuff
-      let character = this.getCharacter(player.characterId)
+      let character = WorldSchema.getCharacter(this.state, player.characterId)
       if (!character) {
         // console.log('making a new character')
         const x = Math.random() * this.state.mapWidth
@@ -210,24 +225,19 @@ export class MarbleGameRoom extends Room<WorldSchema> {
       player.sessionId = undefined;
     }
 
-    try {
-      if (consented) {
-        throw new Error("consented leave");
-      }
 
-      // allow disconnected client to reconnect into this room until 20 seconds
-      await this.allowReconnection(client, 20);
-      console.log('reconnected')
-      // client returned! let's re-activate it.
-      if (player) {
-        player.sessionId = client.sessionId;
-      }
+    this.state.playersBySessionId.delete(client.sessionId);
 
-    } catch (e) {
 
-      // 20 seconds expired. let's remove the client.
-      this.state.playersBySessionId.delete(client.sessionId);
-    }
+    // allow disconnected client to reconnect into this room until 20 seconds
+    // await this.allowReconnection(client, 60);
+    // console.log('reconnected')
+    // client returned! let's re-activate it.
+    // if (player) {
+    //   player.sessionId = client.sessionId;
+    // }
+
+
   }
 
   onDispose() {

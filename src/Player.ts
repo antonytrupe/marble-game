@@ -1,6 +1,5 @@
 import { Schema, type } from "@colyseus/schema"
-import { Character } from "./Character"
-
+ 
 export class Player extends Schema {
 
   @type('string') email: string

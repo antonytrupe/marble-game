@@ -1,11 +1,10 @@
 import { AUTO, Game, Scale, Types } from 'phaser';
-import { Game as MainGame } from '@/client/scenes/Game';
-import { Preloader } from '@/client/scenes/Preloader';
 import { BootScene } from '@/client/scenes/BootScene';
 import { MarbleGameScene } from '@/client/scenes/MarbleGameScene';
 import { HudScene } from '@/client/scenes/HudScene';
 import { TestScene } from '@/client/scenes/TestScene';
 import { AuthTestScene } from './scenes/AuthTestScene';
+import { WorldSelectScene } from './scenes/WorldSelectScene';
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
@@ -18,13 +17,12 @@ const config: Types.Core.GameConfig = {
     dom: {
         createContainer: true
     },
-    backgroundColor: '#028af8',
+    // backgroundColor: '#028af8',
     scene: [
         BootScene,
-        Preloader,
-        MainGame,
-        MarbleGameScene,
         HudScene,
+        MarbleGameScene,
+        WorldSelectScene,
         TestScene,
         AuthTestScene
     ],

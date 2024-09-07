@@ -1,6 +1,7 @@
 import { Body, } from "matter-js";
 import { Player, } from "@/Player";
 import { Vector } from "@/Vector";
+import { Character } from "./Character";
 
 export default class World {
 
@@ -45,7 +46,7 @@ export default class World {
     //     Body.setAngularVelocity(entity, player.angularVelocity)
     // }
 
-    setStatic(entity: Body, player: Player) {
+    setStatic(entity: Body, player: Character) {
         if (player.angularVelocity != 0 || player.velocity.x !== 0 || player.velocity.y !== 0) {
             Body.setStatic(entity, false)
         }
