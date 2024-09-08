@@ -1,5 +1,6 @@
 import { GameObjects, Scene } from "phaser"
 import { MarbleGameScene } from "./MarbleGameScene"
+import { WorldSelectScene } from "./WorldSelectScene"
 
 export class HudScene extends Scene {
     static key = "HudScene"

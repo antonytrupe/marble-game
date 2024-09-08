@@ -47,9 +47,10 @@ export class MarbleGameScene extends Scene {
         this.load.image('scale')
     }
 
-    init({ roomName }: { roomName: string }): void {
+    init({ roomName, token }: { roomName: string, token: string }): void {
         // console.log('MarbleGameScene init')
         this.roomName = roomName
+        this.connect(token)
         // this.scene.launch(HudScene.key)
     }
 
@@ -62,8 +63,6 @@ export class MarbleGameScene extends Scene {
                 this.scene.stop()
             }
         })
-
-        this.connect()
 
         Character.create(this)
 
@@ -261,18 +260,30 @@ export class MarbleGameScene extends Scene {
     // }
 
     private addPlayer(player: Player, email: string) {
+        // console.log('addPlayer', player.id)
+        // console.log(this.room?.sessionId)
+        // console.log(player.sessionId)
+
+        if (this.room && player.sessionId == this.room.sessionId) {
+            // console.log('current player')
+            this.currentPlayer = player
+
+        }
 
         //TODO watch for players to change their sessionId
         player.onChange(() => {
-            console.log('player change')
+            // console.log('player change')
             if (!this.room) {
                 return
             }
             if (player.sessionId == this.room.sessionId) {
+                // console.log('current player')
                 this.currentPlayer = player
                 const character = WorldSchema.getCharacter(this.room.state, player.characterId)
                 if (!!character) {
+                    // console.log('follow character')
                     // this.currentCharacter = character
+                    //  this.cameras.main.startFollow(character.body, true, .7, .7)
                 }
             }
         })
@@ -304,7 +315,7 @@ export class MarbleGameScene extends Scene {
             playerSprite.setExistingBody(compoundBody, true)
 
             character.body = playerSprite.body as unknown as Body
-            console.log(character.body.id)
+            // console.log(character.body.id)
 
             this.add.existing(playerSprite)
         }
@@ -322,10 +333,23 @@ export class MarbleGameScene extends Scene {
         // console.log('this.currentPlayer', JSON.stringify(this.currentPlayer))
         // console.log('character.id', character.id)
         if (this.currentPlayer?.characterId == character.id) {
+            // console.log('following', character.id)
             // this.currentPlayerSprite = playerSprite
-            // this.currentCharacter = character
+            //  this.currentCharacter = character
             this.cameras.main.startFollow(playerSprite, true, .7, .7)
         }
+
+        // character.listen()
+
+        // character.onChange(() => {
+        //     if (this.currentPlayer?.characterId == character.id) {
+        //         console.log('following', character.id)
+        //         // this.currentPlayerSprite = playerSprite
+        //         //  this.currentCharacter = character
+        //         this.cameras.main.startFollow(playerSprite, true, .7, .7)
+        //     }
+        // })
+
         character.messages.onAdd((item) => {
             this.onChat(item, character)
         })
@@ -399,8 +423,8 @@ export class MarbleGameScene extends Scene {
 
     }
 
-    async connect() {
-        console.log('MarbleGameScene connect')
+    async connect(token: string) {
+        // console.log('MarbleGameScene connect')
         //add connection status text
         const connectionStatusText = this.add
             .text(300, 0, "Trying to connect with the server...")
@@ -410,6 +434,7 @@ export class MarbleGameScene extends Scene {
         // this.registry.events.destroy()
 
         this.client = new Client(BACKEND_URL)
+        this.client.auth.token = token
 
         try {
             this.room = await this.client.joinOrCreate(this.roomName, {})
@@ -443,7 +468,7 @@ export class MarbleGameScene extends Scene {
             })
 
             this.room.state.onChange(() => {
-                console.log('room.state.onChange')
+                // console.log('room.state.onChange')
                 if (this.room) {
                     this.registry.set('turnNumber', this.room.state.turnNumber)
                 }

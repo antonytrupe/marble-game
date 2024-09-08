@@ -34,11 +34,11 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     this.state.mapWidth = 800
     this.state.mapHeight = 600
 
-    this.onMessage('auth', async (client,f) => {
-      console.log('auth change')
+    this.onMessage('auth', async (client, f) => {
+      // console.log('auth change')
       const email = client.auth
-      console.log(f,email)
-      console.log(client.userData)
+      // console.log(f, email)
+      // console.log(client.userData)
 
       // console.log(email)
       if (!!email) {
@@ -68,14 +68,36 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     })
 
     this.onMessage('chat', (client: Client, input) => {
-      this.chat(client, input)
-
-      //enqueue input to user input buffer.
-      //player.inputQueue.push(input)
+      const player = this.getPlayerBySession(client.sessionId)
+      if (player) {
+        const character = WorldSchema.getCharacter(this.state, player.characterId)
+        if (character) {
+          if (input[0] == '/') {
+            this.command(player, character, input)
+          }
+          else {
+            this.chat(player, character, input)
+          }
+        }
+      }
     })
 
     //let elapsedTime = 0
     this.setSimulationInterval((deltaTime) => this.update(deltaTime))
+  }
+
+  command(player: Player, character: Character, input: string) {
+    const parts = input.trim().substring(1).split(' ')
+    console.log(parts)
+
+    if (['spawn', 'spwn', 'spn', 'spa'].includes(parts[0])) {
+      if (['tree'].includes(parts[1])) {
+        this.spawnTree()
+      }
+    }
+  }
+  spawnTree() {
+    throw new Error("Method not implemented.")
   }
 
   getCharacterBySessionId(sessionId: string) {
@@ -88,15 +110,11 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     return character
   }
 
-  private chat(client: Client, input: string) {
-    console.log(client.sessionId, input)
-    //handle player input
-    const player = this.getPlayerBySession(client.sessionId)
-    if (player?.characterId) {
-      const character = WorldSchema.getCharacter(this.state, player?.characterId)
-      character?.messages.push(new Message(input))
-    }
+  private chat(player: Player, character: Character, input: string) {
+    // console.log(client.sessionId, input)
+    character.messages.push(new Message(input))
   }
+
   getPlayerBySession(sessionId: string) {
     return this.state.playersBySessionId.get(sessionId)
   }
@@ -150,7 +168,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
 
   onJoin(client: Client, options: any, email?: string | boolean) {
     console.log('onJoin', client.sessionId, email)
-    
+
 
     if (typeof email != 'string' && email) {
       console.log('anonymous user')
@@ -163,12 +181,12 @@ export class MarbleGameRoom extends Room<WorldSchema> {
       let player = this.getPlayer(email)
       // console.log(player)
       if (!player) {
-        // console.log('made a new player', email)
+        console.log('made a new player', email)
         player = new Player()
         player.email = email
         player.id = uuidv4()
       }
-      
+
       if (player.sessionId != client.sessionId) {
         if (player.sessionId) {
           this.state.playersBySessionId.delete(player.sessionId)

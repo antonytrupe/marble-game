@@ -8,7 +8,10 @@ export class BootScene extends Scene {
 
     constructor() {
         // console.log('BootScene constructor')
-        super({ key: "BootScene", active: true })
+        super({
+            key: "BootScene",
+            active: true
+        })
     }
 
     preload() {
@@ -23,7 +26,7 @@ export class BootScene extends Scene {
 
     async create() {
         // console.log('BootScene create')
-
+        this.client = this.createClient()
         //console.log(window.location.hash)
         //console.log(window.location.pathname)
         //automatically navigate to hash scene if provided
@@ -33,13 +36,17 @@ export class BootScene extends Scene {
             // console.log(hashParts)
             this.runScene(hashParts[0], hashParts[1])
         }
-
-        this.client = this.createClient()
+        else {
+            this.registry.events.emit('worldselect.visible', false)
+        }
 
         this.client.auth.onChange((authData: { user: string; token: string }) => {
             // console.log('BootScene client.auth.onChange', authData)
             this.registry.set('auth.email', authData.user)
             this.registry.events.emit('auth.email', authData.user)
+            if (authData.user) {
+                this.registry.events.emit('worldselect.visible', true)
+            }
         })
 
         this.registry.events.on('path', async (sceneName: string, roomName: string) => {
@@ -49,16 +56,18 @@ export class BootScene extends Scene {
         })
 
         this.registry.events.on('auth.logout', async () => {
-            console.log('log out')
+            // console.log('log out')
             if (this.client) {
                 window.location.hash = ''
                 await this.client.auth.signOut()
+                this.registry.events.emit('worldselect.visible', false)
             }
         })
 
         this.registry.events.on('auth.login', async () => {
             if (this.client) {
                 await this.client.auth.signInWithProvider('google')
+                this.registry.events.emit('worldselect.visible', true)
             }
         })
 
@@ -93,16 +102,15 @@ export class BootScene extends Scene {
 
     update() {
         // console.log('update')
-
     }
 
     runScene(sceneName: string, roomName: string) {
-        console.log('runScene', sceneName, roomName)
+        // console.log('runScene', sceneName, roomName)
         window.location.hash = `${sceneName}|${roomName}`
         // this.scene.stop()
         // console.log(this.game.scene)
-        this.scene.launch(sceneName, { roomName })
+        this.scene.launch(sceneName, { roomName, token: this.client.auth.token })
         // window.location.hash = sceneName + (!!roomName ? '|' + roomName : '')
+        this.registry.events.emit('worldselect.visible', false)
     }
-
 }

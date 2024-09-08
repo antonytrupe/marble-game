@@ -2,6 +2,7 @@ import { Schema, type, MapSchema, filterChildren } from "@colyseus/schema";
 import { Player } from "@/Player";
 import { Character } from "./Character";
 import { Client } from "colyseus";
+import WorldObject from "./WorldObject";
 
 export class WorldSchema extends Schema {
   @type("number") mapWidth: number
@@ -36,6 +37,7 @@ export class WorldSchema extends Schema {
   // })
   @type({ map: Player }) playersByEmail = new MapSchema<Player>()
   @type({ map: Character }) characters = new MapSchema<Character>()
+  @type({ map: WorldObject }) objects = new MapSchema<WorldObject>()
 
   static getCharacter(state: WorldSchema, characterId: string): Character | undefined {
     const character = state?.characters.get(characterId)

@@ -10,8 +10,7 @@ export class WorldSelectScene extends Scene {
         // console.log('WorldSelectScene constructor')
         super({
             key: WorldSelectScene.key,
-            visible: false,
-            active: true
+            active: true,
         })
     }
 
@@ -22,19 +21,15 @@ export class WorldSelectScene extends Scene {
 
     init(): void {
         // console.log('WorldSelectScene init')
+        this.scene.setVisible(false)
     }
 
     create() {
         // console.log('WorldSelectScene create')
 
-        this.registry.events.on('auth.email', (email: any) => {
-            // console.log('HudScene auth.email', email)
-            if (!!email) {
-                this.scene.setVisible(true)
-            }
-            else {
-                this.scene.setVisible(false)
-            }
+        this.registry.events.on('worldselect.visible', (visible: boolean) => {
+            // console.log('WorldSelectScene worldselect.visible', visible)
+            this.scene.setVisible(visible)
         })
 
         this.registry.events.on("rooms", (rooms: RoomAvailable<any>[]) => {
@@ -80,6 +75,7 @@ export class WorldSelectScene extends Scene {
                     console.log(sceneName, roomName)
                     // this.runScene(sceneName, roomName)
                     this.registry.events.emit('path', sceneName, roomName)
+                    this.scene.setVisible(false)
                 })
 
             this.worldsGroup.add(t)
