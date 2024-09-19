@@ -1,14 +1,15 @@
 import { ZONETYPE } from "@/ZONETYPE"
-import { Schema } from "@colyseus/schema"
+import { Schema, type } from "@colyseus/schema"
 import { Vector } from "@/Vector"
 
 export default class WorldObject extends Schema implements WorldObjectInterface {
-    id: string = '__test__'
+    @type("string") id: string = '__test__'
     name: string = '__test__'
-    location: Vector = new Vector()
+    @type(Vector) location: Vector = new Vector()
     rotation: number = 0
+    @type("string") sprite: string
     // shape: SHAPE = SHAPE.CIRCLE
-    radiusX: number = 1
+    @type("number") radiusX: number = 1
     radiusY: number = 1
     width: number = 1
     height: number = 1
@@ -16,11 +17,13 @@ export default class WorldObject extends Schema implements WorldObjectInterface 
     subObjects: WorldObject[] = []
     zoneType: ZONETYPE[] = [ZONETYPE.TACTICAL]
     physics: boolean
+    body: any
 
     constructor({ id = '__test__',
         name = "__test__",
         location = new Vector(),
         rotation = 0,
+        sprite = 'marble',
         // shape = SHAPE.CIRCLE,
         radiusX = 1,
         radiusY = 1,
@@ -35,6 +38,7 @@ export default class WorldObject extends Schema implements WorldObjectInterface 
         this.name = name
         this.location = location
         this.rotation = rotation
+        this.sprite = sprite
         // this.shape = shape
         this.radiusX = radiusX
         this.radiusY = radiusY
@@ -52,6 +56,7 @@ interface WorldObjectInterface {
     name?: string
     location?: Vector
     rotation?: number
+    sprite: string
     // shape?: SHAPE
     radiusX?: number
     radiusY?: number

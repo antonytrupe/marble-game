@@ -10,6 +10,7 @@ import { respondToVisibility } from "@/client/respondToVisibility"
 import ChatBubble from "@/client/ChatBubble"
 import { Character } from "@/Character"
 import { BACKEND_URL } from "../BACKEND_URL"
+import WorldObject from "@/WorldObject"
 
 export class MarbleGameScene extends Scene {
     static key = "MarbleGameScene"
@@ -27,6 +28,7 @@ export class MarbleGameScene extends Scene {
 
     chatMode: boolean = false
     scaleSprite: GameObjects.TileSprite
+    token: string
 
     constructor() {
         // console.log('MarbleGameScene constructor')
@@ -45,18 +47,23 @@ export class MarbleGameScene extends Scene {
         this.load.html("input", "input.html")
         Character.preload(this)
         this.load.image('scale')
+
+      
+        this.load.image('tree','tree/texture.svg')
+        this.load.atlas('marble', 'marble/texture.png', 'marble/texture.json')
+         
     }
 
     init({ roomName, token }: { roomName: string, token: string }): void {
         // console.log('MarbleGameScene init')
         this.roomName = roomName
-        this.connect(token)
+        this.token = token
         // this.scene.launch(HudScene.key)
     }
 
     async create() {
         // console.log('MarbleGameScene create')
-
+        this.createClient(this.token)
         this.registry.events.on('auth.email', (email: any) => {
             // console.log('HudScene auth.email', email)
             if (!email) {
@@ -132,6 +139,13 @@ export class MarbleGameScene extends Scene {
 
         if (!this.room) {
             return
+        }
+
+
+        if (Phaser.Input.Keyboard.JustDown(this.keys.SLASH) && !this.chatMode) {
+            this.chatMode = true
+            const text: HTMLInputElement = this.textInput.getChildByName("text") as HTMLInputElement
+            text.value = '/'
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.keys.ENTER)) {
@@ -323,20 +337,21 @@ export class MarbleGameScene extends Scene {
             console.log('click', character.id)
         })
 
+        character.onRemove(() => {
+            console.log('character onRemove')
+        })
+
+        playerSprite.on('destroy', () => {
+            console.log('playersprite on destroy')
+            //playerSprite.removeAllListeners()
+
+        })
+
         Character.move(character)
         const [mb] = this.matter.getMatterBodies([playerSprite])
-        // this.matter.body.setAngle(mb, player.angle, true)
-        // this.matter.body.setAngularVelocity(mb, player.angularVelocity)
-        // this.playerSprites[sessionId] = playerSprite
 
-        //TODO is current player's character
-        // console.log('this.currentPlayer', JSON.stringify(this.currentPlayer))
-        // console.log('character.id', character.id)
         if (this.currentPlayer?.characterId == character.id) {
-            // console.log('following', character.id)
-            // this.currentPlayerSprite = playerSprite
-            //  this.currentCharacter = character
-            this.cameras.main.startFollow(playerSprite, true, .7, .7)
+            this.cameras.main.startFollow(playerSprite, true, .05, .05)
         }
 
         // character.listen()
@@ -423,7 +438,7 @@ export class MarbleGameScene extends Scene {
 
     }
 
-    async connect(token: string) {
+    async createClient(token: string) {
         // console.log('MarbleGameScene connect')
         //add connection status text
         const connectionStatusText = this.add
@@ -434,10 +449,18 @@ export class MarbleGameScene extends Scene {
         // this.registry.events.destroy()
 
         this.client = new Client(BACKEND_URL)
+        // this.client.reconnect()
+
         this.client.auth.token = token
 
         try {
             this.room = await this.client.joinOrCreate(this.roomName, {})
+
+            this.room.onLeave(async (code) => {
+                console.log('onleave', code)
+                // const room = await this.client?.reconnect(cachedReconnectionToken);
+                //TODO try to reconnect, or go back to the world select scene
+            })
 
             this.client.auth.onChange(async (authData: { user: string; token: string }) => {
                 // console.log('auth onchange', authData)
@@ -483,6 +506,11 @@ export class MarbleGameScene extends Scene {
                 this.addCharacter(character)
             })
 
+            this.room.state.objects.onAdd((object: WorldObject, id: string) => {
+                // console.log('new character', characterId)
+                this.addObject(object)
+            })
+
             //remove local reference when entity is removed from the server
             this.room.state.playersBySessionId.onRemove((player: Player, sessionId: string) => {
 
@@ -495,5 +523,45 @@ export class MarbleGameScene extends Scene {
             console.log(e)
             connectionStatusText.text = "Could not connect with the server."
         }
+    }
+    addObject(object: WorldObject) {
+        console.log('addObject',JSON.stringify(object))
+        let playerSprite: Physics.Matter.Sprite
+        {
+            const playerCollider = this.matter.bodies.circle(object.location.x, object.location.y, object.radiusX, { isSensor: false, label: 'playerCollider' })
+            const playerSensor = this.matter.bodies.circle(object.location.x, object.location.y, object.radiusX, { isSensor: true, label: 'playerCollider' })
+            const compoundBody = this.matter.body.create({isStatic:true, parts: [playerCollider, playerSensor] })
+
+            playerSprite = new Physics.Matter.Sprite(this.matter.world,
+                object.location.x, object.location.y,
+                'tree', 0, {
+                shape: 'circle',
+                friction: .0,
+                frictionAir: .00,
+                frictionStatic: .0,
+                isStatic: true
+            })
+
+
+            playerSprite.setExistingBody(compoundBody, true)
+
+            object.body = playerSprite.body as unknown as Body
+            // console.log(character.body.id)
+
+            this.add.existing(playerSprite)
+        }
+        playerSprite.on('pointerdown', () => {
+            console.log('click', object.id)
+        })
+
+        object.onRemove(() => {
+            console.log('character onRemove')
+        })
+
+        playerSprite.on('destroy', () => {
+            console.log('playersprite on destroy')
+            playerSprite.removeAllListeners()
+
+        })
     }
 }

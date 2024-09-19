@@ -7,6 +7,8 @@ import { Message } from "@/Message"
 import { KEY_ACTION } from "@/Keys"
 import { Character } from "@/Character"
 import { JWT } from "@colyseus/auth"
+import WorldObject from "@/WorldObject"
+import { Vector } from "@/Vector"
 
 export class MarbleGameRoom extends Room<WorldSchema> {
   engine: Engine
@@ -79,6 +81,12 @@ export class MarbleGameRoom extends Room<WorldSchema> {
             this.chat(player, character, input)
           }
         }
+        else {
+          console.log('we got a message and could not find the character')
+        }
+      }
+      else {
+        console.log('we got a message and could not find the player')
       }
     })
 
@@ -96,8 +104,24 @@ export class MarbleGameRoom extends Room<WorldSchema> {
       }
     }
   }
+
   spawnTree() {
-    throw new Error("Method not implemented.")
+    console.log('spawnTree')
+    const tree = new WorldObject({ id: uuidv4(), sprite: "tree", radiusX: 30, location: new Vector() })
+    this.state.objects.set(tree.id, tree)
+
+    const circle = Bodies.circle(tree.location.x, tree.location.y, 30,
+      {
+        friction: 0,
+        frictionAir: .0,
+        frictionStatic: .0
+      })
+
+    Body.setStatic(circle, true)
+
+    tree.body = circle
+    Composite.add(this.engine.world, [circle])
+
   }
 
   getCharacterBySessionId(sessionId: string) {
@@ -182,9 +206,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
       // console.log(player)
       if (!player) {
         console.log('made a new player', email)
-        player = new Player()
-        player.email = email
-        player.id = uuidv4()
+        player = this.createPlayer(email)
       }
 
       if (player.sessionId != client.sessionId) {
@@ -201,31 +223,43 @@ export class MarbleGameRoom extends Room<WorldSchema> {
       let character = WorldSchema.getCharacter(this.state, player.characterId)
       if (!character) {
         // console.log('making a new character')
-        const x = Math.random() * this.state.mapWidth
-        const y = Math.random() * this.state.mapHeight
-        character = new Character({ x, y })
-        character.id = uuidv4()
-        character.playerId = player.id
-        player.characterId = character.id
-
-        character.angle = 0
-        character.angularVelocity = 0
-        this.state.characters.set(character.id, character)
-
-        const circle = Bodies.circle(character.position.x, character.position.y, 30,
-          {
-            friction: 0,
-            frictionAir: .0,
-            frictionStatic: .0
-          })
-
-        Body.setStatic(circle, true)
-
-        character.body = circle
-        Composite.add(this.engine.world, [circle])
+        character = this.createCharacter(player)
       }
       // console.log('characters.size', this.state.characters.size)
     }
+  }
+
+  private createCharacter(player: Player) {
+    const x = Math.random() * this.state.mapWidth
+    const y = Math.random() * this.state.mapHeight
+    const character = new Character({ x, y })
+    character.id = uuidv4()
+    character.playerId = player.id
+    player.characterId = character.id
+
+    character.angle = 0
+    character.angularVelocity = 0
+    this.state.characters.set(character.id, character)
+
+    const circle = Bodies.circle(character.position.x, character.position.y, 30,
+      {
+        friction: 0,
+        frictionAir: .0,
+        frictionStatic: .0
+      })
+
+    Body.setStatic(circle, true)
+
+    character.body = circle
+    Composite.add(this.engine.world, [circle])
+    return character
+  }
+
+  private createPlayer(email: string) {
+    const player = new Player()
+    player.email = email
+    player.id = uuidv4()
+    return player
   }
 
   private getPlayer(email: string) {
@@ -244,11 +278,11 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     }
 
 
-    this.state.playersBySessionId.delete(client.sessionId);
+    this.state.playersBySessionId.delete(client.sessionId)
 
 
     // allow disconnected client to reconnect into this room until 20 seconds
-    // await this.allowReconnection(client, 60);
+    this.allowReconnection(client, 60)
     // console.log('reconnected')
     // client returned! let's re-activate it.
     // if (player) {

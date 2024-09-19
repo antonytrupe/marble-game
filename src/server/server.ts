@@ -43,7 +43,7 @@ const two = 2
 
 const appConfig = config({
     options: {
-        // devMode: true,
+        //  devMode: true, 
     },
 
     initializeGameServer: (gameServer) => {
