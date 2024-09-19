@@ -28,7 +28,7 @@ export class HudScene extends Scene {
     init(): void {
         // console.log('HudScene init')
         this.debug = this.add.text(0, 0, 'DEBUG', { color: 'white' }).setScrollFactor(0)
-        this.debug.y = this.cameras.main.height - this.debug.height
+        this.debug.y = this.cameras.main.height - this.debug.height - 20
         this.emailText = this.add.text(10, 10, "").removeFromDisplayList()
 
         this.logout = this.add.text(10, 30, "LOG OUT").setInteractive().on('pointerdown', async () => {
@@ -96,11 +96,28 @@ export class HudScene extends Scene {
         this.logout.addToDisplayList()
     }
 
+
+
+
     update(time: number, delta: number): void {
         // console.log('hud update')
         const turnNumber = this.registry.get('turnNumber')
         if (turnNumber) {
-            this.debug.text = 'turn ' + turnNumber
+            const day = Math.floor(turnNumber / HOURS_PER_DAY / MINUTES_PER_HOUR / TURNS_PER_MINUTE)
+            const hour = Math.floor(turnNumber / MINUTES_PER_HOUR / TURNS_PER_MINUTE)
+            const min = Math.floor(turnNumber / TURNS_PER_MINUTE)
+            const turn = turnNumber % (TURNS_PER_MINUTE)
+            this.debug.text = `day: ${day}\n` +
+                `hour: ${hour}\n` +
+                `min: ${min}\n` +
+                `turn: ${turn}\n` +
+                `turn: ${turnNumber}`
+            this.debug.y = this.cameras.main.height - this.debug.height - 20
         }
     }
 }
+
+const TURNS_PER_MINUTE = 10
+const MINUTES_PER_HOUR = 100
+const HOURS_PER_DAY = 10
+const DAYS_PER_YEAR = 100
