@@ -43,11 +43,11 @@ const two = 2
 
 const appConfig = config({
     options: {
-        //  devMode: true, 
+        devMode: true,
     },
 
     initializeGameServer: (gameServer) => {
-        // console.log('initializeGameServer')
+        // console.log('initializeGameServer') 
         /**
          * Define your room handlers:
          */
@@ -60,6 +60,10 @@ const appConfig = config({
         // call `.simulateLatency()` later through an http route
         //
         gameServerRef = gameServer
+
+        gameServer.onShutdown(function () {
+            console.log("master process is being shut down!");
+        });
     },
 
     initializeExpress: (app) => {
@@ -84,8 +88,8 @@ const appConfig = config({
         /**
          * Before before gameServer.listen() is called.
          */
-        await matchMaker.createRoom("marbleGame" + one, { /* options */ })
-        await matchMaker.createRoom("marbleGame" + two, { /* options */ })
+        // await matchMaker.createRoom("marbleGame" + one, { /* options */ })
+        // await matchMaker.createRoom("marbleGame" + two, { /* options */ })
         // const rooms=await matchMaker.query()
         // console.log(rooms)
     }
@@ -93,5 +97,7 @@ const appConfig = config({
 
 // Create and listen on 2567 (or PORT environment variable.)
 listen(appConfig).then((server) => {
-
+    server.onShutdown(function () {
+        console.log("master process is being shut down!")
+    });
 })

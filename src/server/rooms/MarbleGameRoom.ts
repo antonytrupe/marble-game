@@ -193,6 +193,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
   onJoin(client: Client, options: any, email?: string | boolean) {
     console.log('onJoin', client.sessionId, email)
 
+    // this.allowReconnection(client, 60)
 
     if (typeof email != 'string' && email) {
       console.log('anonymous user')
@@ -274,22 +275,26 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     // // this.state.players.delete(client.sessionId)
     // // flag client as inactive for other users
     if (player) {
-      player.sessionId = undefined;
+      player.sessionId = undefined
     }
-
 
     this.state.playersBySessionId.delete(client.sessionId)
 
-
     // allow disconnected client to reconnect into this room until 20 seconds
-    this.allowReconnection(client, 60)
+    // await this.allowReconnection(client, 60)
     // console.log('reconnected')
     // client returned! let's re-activate it.
     // if (player) {
-    //   player.sessionId = client.sessionId;
-    // }
+    //   player.sessionId = client.sessionId; 
+    // } 
+  }
 
+  onCacheRoom() {
+    return { foo: "bar" }
+  }
 
+  onRestoreRoom() {
+    console.log('onRestoreRoom')
   }
 
   onDispose() {

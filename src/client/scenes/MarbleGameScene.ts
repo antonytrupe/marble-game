@@ -48,10 +48,11 @@ export class MarbleGameScene extends Scene {
         Character.preload(this)
         this.load.image('scale')
 
-      
-        this.load.image('tree','tree/texture.svg')
+        this.spritesGroup = this.add.group()
+
+        this.load.image('tree', 'tree/texture.svg')
         this.load.atlas('marble', 'marble/texture.png', 'marble/texture.json')
-         
+
     }
 
     init({ roomName, token }: { roomName: string, token: string }): void {
@@ -60,6 +61,8 @@ export class MarbleGameScene extends Scene {
         this.token = token
         // this.scene.launch(HudScene.key)
     }
+
+    spritesGroup: GameObjects.Group
 
     async create() {
         // console.log('MarbleGameScene create')
@@ -331,7 +334,8 @@ export class MarbleGameScene extends Scene {
             character.body = playerSprite.body as unknown as Body
             // console.log(character.body.id)
 
-            this.add.existing(playerSprite)
+            this.spritesGroup.add(playerSprite, true)
+            // this.add.existing(playerSprite)
         }
         playerSprite.on('pointerdown', () => {
             console.log('click', character.id)
@@ -430,14 +434,6 @@ export class MarbleGameScene extends Scene {
         }))
     }
 
-    // async disconnect() {
-    //     await this.room.leave(true)
-    // }
-
-    stateChangeHandlers() {
-
-    }
-
     async createClient(token: string) {
         // console.log('MarbleGameScene connect')
         //add connection status text
@@ -451,16 +447,11 @@ export class MarbleGameScene extends Scene {
         this.client = new Client(BACKEND_URL)
         // this.client.reconnect()
 
+
         this.client.auth.token = token
 
         try {
             this.room = await this.client.joinOrCreate(this.roomName, {})
-
-            this.room.onLeave(async (code) => {
-                console.log('onleave', code)
-                // const room = await this.client?.reconnect(cachedReconnectionToken);
-                //TODO try to reconnect, or go back to the world select scene
-            })
 
             this.client.auth.onChange(async (authData: { user: string; token: string }) => {
                 // console.log('auth onchange', authData)
@@ -490,32 +481,7 @@ export class MarbleGameScene extends Scene {
                 }
             })
 
-            this.room.state.onChange(() => {
-                // console.log('room.state.onChange')
-                if (this.room) {
-                    this.registry.set('turnNumber', this.room.state.turnNumber)
-                }
-            })
-
-            this.room.state.playersByEmail.onAdd((player: Player, email: string) => {
-                this.addPlayer(player, email)
-            })
-
-            this.room.state.characters.onAdd((character: Character, characterId: string) => {
-                // console.log('new character', characterId)
-                this.addCharacter(character)
-            })
-
-            this.room.state.objects.onAdd((object: WorldObject, id: string) => {
-                // console.log('new character', characterId)
-                this.addObject(object)
-            })
-
-            //remove local reference when entity is removed from the server
-            this.room.state.playersBySessionId.onRemove((player: Player, sessionId: string) => {
-
-                // this.onRemove(sessionId)
-            })
+            this.stateChangeHandlers(this.client, this.room)
             connectionStatusText.destroy()
 
         } catch (e) {
@@ -524,13 +490,69 @@ export class MarbleGameScene extends Scene {
             connectionStatusText.text = "Could not connect with the server."
         }
     }
+
+    private stateChangeHandlers(client: Client, room: Room) {
+
+        room.onLeave(async (code) => {
+            console.log('onleave', code)
+            console.log(await this.client?.getAvailableRooms())
+            console.log(1)
+            room.removeAllListeners()
+            // const room = await this.client?.reconnect(reconnectionToken)
+            if (this.client) {
+                this.room = await client.joinOrCreate(this.roomName)
+
+                //TODO reset matter
+
+                //this.spritesGroup.removeAllListeners()
+                //this.spritesGroup.shutdown()
+                this.spritesGroup.clear(true, true)
+                this.matter.world.remove(this.matter.world.getAllBodies())
+
+
+                this.stateChangeHandlers(client, this.room)
+
+                console.log('reconnected, maybe')
+            }
+            else {
+                console.log('lost client')
+            }
+            //TODO try to reconnect, or go back to the world select scene
+        })
+
+        room.state.onChange(() => {
+            // console.log('room.state.onChange')
+            if (this.room) {
+                this.registry.set('turnNumber', this.room.state.turnNumber)
+            }
+        })
+
+        room.state.playersByEmail.onAdd((player: Player, email: string) => {
+            this.addPlayer(player, email)
+        })
+
+        room.state.characters.onAdd((character: Character, characterId: string) => {
+            // console.log('new character', characterId)
+            this.addCharacter(character)
+        })
+
+        room.state.objects.onAdd((object: WorldObject, id: string) => {
+            // console.log('new character', characterId)
+            this.addObject(object)
+        })
+
+        //remove local reference when entity is removed from the server
+        room.state.playersBySessionId.onRemove((player: Player, sessionId: string) => {
+        })
+    }
+
     addObject(object: WorldObject) {
-        console.log('addObject',JSON.stringify(object))
+        console.log('addObject', JSON.stringify(object))
         let playerSprite: Physics.Matter.Sprite
         {
             const playerCollider = this.matter.bodies.circle(object.location.x, object.location.y, object.radiusX, { isSensor: false, label: 'playerCollider' })
             const playerSensor = this.matter.bodies.circle(object.location.x, object.location.y, object.radiusX, { isSensor: true, label: 'playerCollider' })
-            const compoundBody = this.matter.body.create({isStatic:true, parts: [playerCollider, playerSensor] })
+            const compoundBody = this.matter.body.create({ isStatic: true, parts: [playerCollider, playerSensor] })
 
             playerSprite = new Physics.Matter.Sprite(this.matter.world,
                 object.location.x, object.location.y,
