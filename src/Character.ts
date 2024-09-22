@@ -1,6 +1,6 @@
 import { Schema, type, ArraySchema } from "@colyseus/schema"
 import { Scene } from "phaser"
-import { Body, World } from "matter-js"
+import { Body } from "matter-js"
 import { Message } from "@/Message"
 import { Vector } from "@/Vector"
 import { KEY_ACTION } from "@/Keys"
@@ -11,7 +11,7 @@ export class Character extends Schema {
 
   @type("string") id: string
   @type("string") playerId: string
-  @type('string') name: string
+  @type("string") name: string
   @type(Vector) position: Vector = new Vector()
   @type(Vector) velocity: Vector = new Vector()
   @type("number") angle: number = 0
@@ -31,13 +31,34 @@ export class Character extends Schema {
   //matterjs body, both client and server manage their own instance of this
   body: Body
 
-  constructor(data: { x: number; y: number; scene?: World }) {
-    super();
-    ({ x: this.position.x, y: this.position.y } = data)
+  constructor({ character }: { character: Character })
+  constructor({ x, y }: { x: number, y: number })
+  constructor({ x, y, character }: { x: number, y: number, character: Character }) {
+    super()
+    // ({ x: this.position.x, y: this.position.y } = data)
+    this.position.x = x
+    this.position.y = y
+    if (!!character) {
+     console.log(character)
+
+      this.id = character.id
+      this.playerId = character.playerId
+      this.name = character.name
+      this.position.x = character.position.x
+      this.position.y = character.position.y
+      this.velocity.x = character.velocity.x
+      this.velocity.y = character.velocity.y
+      this.angle = character.angle
+      this.angularVelocity = character.angularVelocity
+      this.speed = character.speed
+      this.movement = character.movement
+      this.speedMode = character.speedMode
+      this.messages.push(...Array.from(character.messages))
+    }
   }
 
   static preload(scene: Scene) {
-    scene.load.image('ship_0001')
+    // scene.load.image('ship_0001')
     scene.load.atlas('marble', 'marble/texture.png', 'marble/texture.json')
   }
 
