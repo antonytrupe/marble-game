@@ -36,7 +36,8 @@ export default class WorldObject extends Schema implements WorldObjectInterface 
         super()
         this.id = id
         this.name = name
-        this.location = location
+        this.location.x = location.x
+        this.location.y = location.y
         this.rotation = rotation
         this.sprite = sprite
         // this.shape = shape

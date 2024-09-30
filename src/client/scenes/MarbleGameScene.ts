@@ -1,6 +1,6 @@
 import { Body } from "matter-js"
 import { Room, Client } from "colyseus.js"
-import { GameObjects, Input, Physics, Scene } from "phaser"
+import { GameObjects, Input, Physics, Scene, } from "phaser"
 import { WorldSchema } from "@/WorldSchema"
 import { Player } from "@/Player"
 import { Message } from "@/Message"
@@ -47,12 +47,8 @@ export class MarbleGameScene extends Scene {
         this.load.html("input", "input.html")
         Character.preload(this)
         this.load.image('scale')
-
         this.spritesGroup = this.add.group()
-
         this.load.image('tree', 'tree/texture.svg')
-        this.load.atlas('marble', 'marble/texture.png', 'marble/texture.json')
-
     }
 
     init({ roomName, token }: { roomName: string, token: string }): void {
@@ -66,7 +62,7 @@ export class MarbleGameScene extends Scene {
 
     async create() {
         // console.log('MarbleGameScene create')
-        this.createClient(this.token)
+        await this.createClient(this.token)
         this.registry.events.on('auth.email', (email: any) => {
             // console.log('HudScene auth.email', email)
             if (!email) {
@@ -287,7 +283,7 @@ export class MarbleGameScene extends Scene {
 
         }
 
-        //TODO watch for players to change their sessionId
+        //watch for players to change their sessionId
         player.onChange(() => {
             // console.log('player change')
             if (!this.room) {
@@ -311,51 +307,56 @@ export class MarbleGameScene extends Scene {
         // console.log('characters.size', JSON.parse(JSON.stringify(this.room.state.characters.size)))
         // console.log('world bodies count start', this.matter.world.getAllBodies().length)
 
-        let playerSprite: Physics.Matter.Sprite
+        //let playerSprite: Physics.Matter.Sprite
         {
             const playerCollider = this.matter.bodies.circle(character.position.x, character.position.y, 30, { isSensor: false, label: 'playerCollider' })
             const playerSensor = this.matter.bodies.circle(character.position.x, character.position.y, 32, { isSensor: true, label: 'playerCollider' })
             const compoundBody = this.matter.body.create({ parts: [playerCollider, playerSensor] })
 
-            playerSprite = new Physics.Matter.Sprite(this.matter.world,
-                character.position.x, character.position.y,
-                'marble', 0, {
-                shape: 'circle',
-                friction: .0,
-                frictionAir: .00,
-                frictionStatic: .0,
-                isStatic: true
-            })
+            character.sprite = new Physics.Matter.Sprite(this.matter.world,
+                character.position.x,
+                character.position.y,
+                'marble',
+                0,
+                {
+                    shape: 'circle',
+                    friction: .0,
+                    frictionAir: .00,
+                    frictionStatic: .0,
+                    isStatic: true
+                })
 
-            playerSprite.play('marble-roll', true).anims.pause()
+            character.sprite.play('marble-roll', true).anims.pause()
 
-            playerSprite.setExistingBody(compoundBody, true)
+            character.sprite.setExistingBody(compoundBody, true)
 
-            character.body = playerSprite.body as unknown as Body
+            character.body = character.sprite.body as unknown as Body
             // console.log(character.body.id)
 
-            this.spritesGroup.add(playerSprite, true)
+            this.spritesGroup.add(character.sprite, true)
             // this.add.existing(playerSprite)
         }
-        playerSprite.on('pointerdown', () => {
+        character.sprite.on('pointerdown', () => {
             console.log('click', character.id)
         })
 
         character.onRemove(() => {
             console.log('character onRemove')
+            this.spritesGroup.remove(character.sprite)
+            character.sprite.destroy(true)
         })
 
-        playerSprite.on('destroy', () => {
+        character.sprite.on('destroy', () => {
             console.log('playersprite on destroy')
-            //playerSprite.removeAllListeners()
+            //character.sprite.destroy()
 
         })
 
         Character.move(character)
-        const [mb] = this.matter.getMatterBodies([playerSprite])
+        const [mb] = this.matter.getMatterBodies([character.sprite])
 
         if (this.currentPlayer?.characterId == character.id) {
-            this.cameras.main.startFollow(playerSprite, true, .05, .05)
+            this.cameras.main.startFollow(character.sprite, true, .05, .05)
         }
 
         // character.listen()
@@ -385,12 +386,17 @@ export class MarbleGameScene extends Scene {
                 if (mb.speed > 0) {
                     // playerSprite.play('marble-roll', true)
                     // playerSprite.anims.exists
-                    playerSprite.anims.resume()
+                    // character.sprite.anims.reverse()
+                    if ((character.speed < 0 && !character.sprite.anims.inReverse) || character.speed > 0 && character.sprite.anims.inReverse) {
+                        character.sprite.anims.reverse()
+
+                    }
+                    character.sprite.anims.resume()
                     // playerSprite.anims.resume()
                     // playerSprite.anims.hasStarted
                 }
                 else {
-                    playerSprite.anims.pause()
+                    character.sprite.anims.pause()
                     // playerSprite.stop()
                 }
             }
@@ -402,8 +408,8 @@ export class MarbleGameScene extends Scene {
                 // this.matter.body.setPosition(mb, { x: character.position.x, y: character.position.y }, false)
             }
 
-            playerSprite.setData('serverX', character.position.x)
-            playerSprite.setData('serverY', character.position.y)
+            character.sprite.setData('serverX', character.position.x)
+            character.sprite.setData('serverY', character.position.y)
         })
 
         character.onChange(() => {
@@ -499,18 +505,18 @@ export class MarbleGameScene extends Scene {
             console.log(1)
             room.removeAllListeners()
             // const room = await this.client?.reconnect(reconnectionToken)
+
             if (this.client) {
                 this.room = await client.joinOrCreate(this.roomName)
 
-                //TODO reset matter
+                // reset matter
 
                 //this.spritesGroup.removeAllListeners()
                 //this.spritesGroup.shutdown()
                 this.spritesGroup.clear(true, true)
                 this.matter.world.remove(this.matter.world.getAllBodies())
 
-
-                this.stateChangeHandlers(client, this.room)
+                await this.createClient(this.token)
 
                 console.log('reconnected, maybe')
             }
@@ -535,7 +541,7 @@ export class MarbleGameScene extends Scene {
             // console.log('new character', characterId)
             this.addCharacter(character)
         })
-
+       
         room.state.objects.onAdd((object: WorldObject, id: string) => {
             // console.log('new character', characterId)
             this.addObject(object)

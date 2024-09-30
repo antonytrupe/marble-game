@@ -1,6 +1,6 @@
 import { Schema, type, ArraySchema } from "@colyseus/schema"
-import { Scene } from "phaser"
-import { Body } from "matter-js"
+import { Scene, Physics } from "phaser"
+import { Bodies, Body, Composite } from "matter-js"
 import { Message } from "@/Message"
 import { Vector } from "@/Vector"
 import { KEY_ACTION } from "@/Keys"
@@ -16,7 +16,7 @@ export class Character extends Schema {
   @type(Vector) velocity: Vector = new Vector()
   @type("number") angle: number = 0
   @type("number") angularVelocity: number = 0
-  @type("number") speed: number = 0
+  @type("number") speed: number = 0//this indicates forward/backward
   @type("number") movement: number = 30
   @type("number") speedMode: SPEED_MODE = SPEED_MODE.WALK
   @type([Message]) messages = new ArraySchema<Message>()
@@ -31,6 +31,8 @@ export class Character extends Schema {
   //matterjs body, both client and server manage their own instance of this
   body: Body
 
+  sprite: Physics.Matter.Sprite
+
   constructor({ character }: { character: Character })
   constructor({ x, y }: { x: number, y: number })
   constructor({ x, y, character }: { x: number, y: number, character: Character }) {
@@ -39,7 +41,7 @@ export class Character extends Schema {
     this.position.x = x
     this.position.y = y
     if (!!character) {
-     console.log(character)
+      // console.log(character)
 
       this.id = character.id
       this.playerId = character.playerId
@@ -55,6 +57,7 @@ export class Character extends Schema {
       this.speedMode = character.speedMode
       this.messages.push(...Array.from(character.messages))
     }
+    // console.log(this.velocity)
   }
 
   static preload(scene: Scene) {
@@ -63,7 +66,23 @@ export class Character extends Schema {
   }
 
   static create(scene: Scene) {
-    scene.anims.create({ key: 'marble-roll', frameRate: 10, frames: scene.anims.generateFrameNames('marble', { start: 0, end: 11, prefix: '', suffix: '.png' }), repeat: -1 })
+    scene.anims.create({ key: 'marble-roll', frameRate: 10, frames: scene.anims.generateFrameNames('marble', { start: 1, end: 12, prefix: '' }), repeat: -1 })
+  }
+
+  static createMatterBody(character: Character, world: Composite) {
+    const frictionOptions = {
+      friction: 0,
+      frictionAir: .0,
+      frictionStatic: .0,
+      isStatic: true
+    }
+
+    const playerCollider = Bodies.circle(character.position.x, character.position.y, 30, { isSensor: false, label: 'playerCollider' })
+    const playerSensor = Bodies.circle(character.position.x, character.position.y, 32, { isSensor: true, label: 'playerCollider' })
+    const compoundBody = Body.create({ ...{ parts: [playerCollider, playerSensor] }, ...frictionOptions })
+
+    character.body = compoundBody
+    Composite.add(world, [compoundBody])
   }
 
   static move(character: Character) {
@@ -135,7 +154,14 @@ export class Character extends Schema {
 
     // console.log(JSON.stringify(character.body))
     Body.setAngularVelocity(character.body, character.angularVelocity)
+
     const velocity = getVelocity(character.body.angle, character.speed * character.speedMode)
+
+    //console.log(velocity)
+    if (Number.isNaN(velocity.x)) {
+      console.log(JSON.stringify(velocity))
+    }
+
     Body.setVelocity(character.body, velocity)
     if (character.body.speed <= .01 && character.body.angularSpeed <= .01) {
       Body.setStatic(character.body, true)

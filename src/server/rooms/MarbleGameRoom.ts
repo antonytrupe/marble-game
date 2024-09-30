@@ -1,5 +1,6 @@
 import MatterJS, { Bodies, Body, Composite, Engine } from "matter-js"
 import { Room, Client, updateLobby } from "colyseus"
+import { JWT } from "@colyseus/auth"
 import { createClient } from 'redis';
 import { v4 as uuidv4 } from 'uuid'
 import { WorldSchema } from "@/WorldSchema"
@@ -7,7 +8,6 @@ import { Player } from "@/Player"
 import { Message } from "@/Message"
 import { KEY_ACTION } from "@/Keys"
 import { Character } from "@/Character"
-import { JWT } from "@colyseus/auth"
 import WorldObject from "@/WorldObject"
 import { Vector } from "@/Vector"
 
@@ -38,7 +38,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
       sceneName: 'MarbleGameScene'
     })
       .then(() => {
-        updateLobby(this)
+        updateLobby(this)      
       })
 
     this.engine = Engine.create({ gravity: { x: 0, y: 0 } })
@@ -114,10 +114,10 @@ export class MarbleGameRoom extends Room<WorldSchema> {
         const distance = Math.random() * 80 + 200
         const angle = Math.random() * 2 * Math.PI
         const location = MatterJS.Vector.add(character.position, MatterJS.Vector.create(distance * Math.cos(angle), distance * Math.sin(angle)))
-        // console.log(character.position)
+        console.log(character.position)
         // console.log(angle)
-        // console.log(distance)
-        // console.log(location)
+        console.log(distance)
+        console.log(location)
         this.spawnTree(location)
       }
     }
@@ -127,7 +127,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     console.log('spawnTree')
     // console.log(JSON.stringify(location))
 
-    const tree = new WorldObject({ id: uuidv4(), sprite: "tree", radiusX: 30, location: new Vector({ location }) })
+    const tree = new WorldObject({ id: uuidv4(), sprite: "tree", radiusX: 30, location: new Vector({ x: location.x, y: location.y }) })
     // console.log(JSON.stringify(tree.location))
     this.state.objects.set(tree.id, tree)
 
@@ -172,35 +172,41 @@ export class MarbleGameRoom extends Room<WorldSchema> {
       this.state.turnNumber = newTurnNumber
     }
 
-    Engine.update(this.engine, deltaTime / 1)
+    //Engine.update(this.engine, deltaTime / 1)
 
     this.state.characters.forEach(character => {
       // console.log(character.body.id)
       const body = Composite.get(this.engine.world, character.body.id, 'body') as Body
-      //TODO maybe don't do this here
-      if (!body.velocity || !body.position) {
-        console.log(JSON.stringify(body.velocity))
-        console.log(JSON.stringify(body.position))
-      }
+
       character.angle = body.angle
-      character.velocity.x = body.velocity.x
-      character.velocity.y = body.velocity.y
+
+      //  guard against velocity being NaN
+      if (!Number.isNaN(body.velocity.x)) {
+        character.velocity.x = body.velocity.x
+      }
+      else {
+        console.log(JSON.stringify(body.velocity))
+      }
+      if (!Number.isNaN(body.velocity.x)) {
+        character.velocity.y = body.velocity.y
+      }
       character.position.x = body.position.x
       character.position.y = body.position.y
 
       //dequeue player inputs
-      this.move(character)
+      // this.move(character)
+      Character.move(character)
 
     })
     // if (deltaTime >= 16.667)
     //   console.log(deltaTime)
 
-    // Engine.update(this.engine, deltaTime / 2)
+    Engine.update(this.engine, deltaTime / 1)
   }
 
-  private move(character: Character) {
-    Character.move(character)
-  }
+  // private move(character: Character) {
+  //   Character.move(character)
+  // }
 
   static async onAuth(token: string, request: any) {
     console.log('onAuth', token)
@@ -272,27 +278,16 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     const characters = await this.persistanceClient.json.get('characters') as { string: any }
     // console.log(players)
     Object.entries(characters).forEach(([id, character]) => {
-      // console.log(character)
+      //  console.log(JSON.stringify(character))
       // console.log(id)
       const c = new Character({ character })
-      console.log(c)
-      this.createMatterBody(c)
+      // console.log(JSON.stringify(c))
+      Character.createMatterBody(c,this.engine.world)
       // console.log(c.body.id)
       this.state.characters.set(c.id, c)
 
     })
-
-
-    // this.persistanceClient.hGetAll('characters').then((characters) => {
-    //   console.log(characters)
-    //   Object.keys(characters).forEach((key) => {
-    //     console.log(key)
-    //     console.log(characters[key])
-    //     const character = new Character(JSON.parse(characters[key]))
-    //     this.state.characters.set(key, character)
-    //     this.createMatterBody(character)
-    //   })
-    // })
+ 
   }
 
   private async persist(player: Player, character?: Character) {
@@ -353,25 +348,11 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     character.angularVelocity = 0
     this.state.characters.set(character.id, character)
 
-    this.createMatterBody(character);
+    Character.createMatterBody(character,this.engine.world);
     return character
   }
 
-  private createMatterBody(character: Character) {
-    const frictionOptions = {
-      friction: 0,
-      frictionAir: .0,
-      frictionStatic: .0,
-      isStatic: true
-    }
-
-    const circle = Bodies.circle(character.position.x, character.position.y, 30, frictionOptions)
-
-    //Body.setStatic(circle, true)
-
-    character.body = circle
-    Composite.add(this.engine.world, [circle])
-  }
+  
 
   private createPlayer(email: string) {
     const player = new Player()
