@@ -12,7 +12,7 @@ export default () => {
     const currentScene = (scene: Scene) => {
     }
 
-    return (         
-            <PhaserGame ref={phaserRef}   />       
+    return (
+        <PhaserGame ref={phaserRef} />
     )
 }

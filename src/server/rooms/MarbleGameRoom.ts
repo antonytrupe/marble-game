@@ -13,7 +13,7 @@ import { Vector } from "@/Vector"
 
 export class MarbleGameRoom extends Room<WorldSchema> {
   engine: Engine
-  // world: World = new World()
+  // world: World = new World() 
 
   persistanceClient: ReturnType<typeof createClient>
 
@@ -38,7 +38,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
       sceneName: 'MarbleGameScene'
     })
       .then(() => {
-        updateLobby(this)      
+        updateLobby(this)
       })
 
     this.engine = Engine.create({ gravity: { x: 0, y: 0 } })
@@ -170,6 +170,7 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     const newTurnNumber = Math.floor((now - this.state.creation) / (6 * 1000))
     if (this.state.turnNumber != newTurnNumber) {
       this.state.turnNumber = newTurnNumber
+      console.log(this.state.turnNumber)
     }
 
     //Engine.update(this.engine, deltaTime / 1)
@@ -177,6 +178,10 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     this.state.characters.forEach(character => {
       // console.log(character.body.id)
       const body = Composite.get(this.engine.world, character.body.id, 'body') as Body
+
+      if (!body) {
+        console.log('did not find body for character', character.id)
+      }
 
       character.angle = body.angle
 
@@ -282,12 +287,12 @@ export class MarbleGameRoom extends Room<WorldSchema> {
       // console.log(id)
       const c = new Character({ character })
       // console.log(JSON.stringify(c))
-      Character.createMatterBody(c,this.engine.world)
+      Character.createMatterBody(c, this.engine.world)
       // console.log(c.body.id)
       this.state.characters.set(c.id, c)
 
     })
- 
+
   }
 
   private async persist(player: Player, character?: Character) {
@@ -348,11 +353,11 @@ export class MarbleGameRoom extends Room<WorldSchema> {
     character.angularVelocity = 0
     this.state.characters.set(character.id, character)
 
-    Character.createMatterBody(character,this.engine.world);
+    Character.createMatterBody(character, this.engine.world);
     return character
   }
 
-  
+
 
   private createPlayer(email: string) {
     const player = new Player()
@@ -393,18 +398,18 @@ export class MarbleGameRoom extends Room<WorldSchema> {
 
   }
 
-  onCacheRoom() {
-    return { foo: "bar" }
-  }
+  // onCacheRoom() {
+  //   return {}
+  // }
 
-  onRestoreRoom() {
-    console.log('onRestoreRoom')
-  }
+  // onRestoreRoom() {
+  //   console.log('onRestoreRoom')
+  // }
 
-  onDispose() {
-    return new Promise<void>((resolve, reject) => {
-      console.log("room", this.roomId, this.roomName, "disposing...")
-      resolve()
-    })
-  }
+  // onDispose() {
+  //   return new Promise<void>((resolve, reject) => {
+  //     console.log("room", this.roomId, this.roomName, "disposing...")
+  //     resolve()
+  //   })
+  // }
 }

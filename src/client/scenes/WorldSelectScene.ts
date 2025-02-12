@@ -10,7 +10,7 @@ export class WorldSelectScene extends Scene {
         // console.log('WorldSelectScene constructor')
         super({
             key: WorldSelectScene.key,
-            active: true,
+            //active: true,
         })
     }
 

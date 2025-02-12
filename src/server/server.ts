@@ -4,6 +4,8 @@ import { auth, JWT } from "@colyseus/auth"
 import { monitor } from "@colyseus/monitor"
 import { MarbleGameRoom } from "@/server/rooms/MarbleGameRoom"
 import "@/console.js"
+import { TestRoom } from "./rooms/TestRoom"
+import { TacticalRoom } from "./rooms/TacticalRoom"
 
 let gameServerRef: Server
 
@@ -36,11 +38,6 @@ auth.settings.onParseToken = function (jwt) {
     return jwt;
 }
 
-// const one=Math.floor(Math.random()*100) 
-// const two=Math.floor(Math.random()*100) 
-const one = 1
-const two = 2
-
 const appConfig = config({
     options: {
         devMode: true,
@@ -51,8 +48,10 @@ const appConfig = config({
         /**
          * Define your room handlers:
          */
-        gameServer.define('marbleGame' + one, MarbleGameRoom)//.enableRealtimeListing()
-        gameServer.define('marbleGame' + two, MarbleGameRoom)//.enableRealtimeListing()
+        gameServer.define('TEST', TestRoom)
+        gameServer.define('TACTICAL', TacticalRoom)
+        gameServer.define('MarbleGameRoom', MarbleGameRoom)
+        // gameServer.define('marbleGame' + two, MarbleGameRoom)
         gameServer
             .define("lobby", LobbyRoom)
         //

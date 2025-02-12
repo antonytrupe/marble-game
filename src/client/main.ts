@@ -1,10 +1,13 @@
 import { AUTO, Game, Scale, Types } from 'phaser';
 import { BootScene } from '@/client/scenes/BootScene';
 import { MarbleGameScene } from '@/client/scenes/MarbleGameScene';
-import { HudScene } from '@/client/scenes/HudScene';
 import { TestScene } from '@/client/scenes/TestScene';
 import { AuthTestScene } from './scenes/AuthTestScene';
 import { WorldSelectScene } from './scenes/WorldSelectScene';
+import { TacticalScene } from './scenes/TacticalScene';
+import { TacticalHudScene } from './scenes/TacticalHudScene';
+import { Login } from './scenes/Login';
+import { CharacterSelect } from './scenes/CharacterSelect';
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
@@ -17,11 +20,14 @@ const config: Types.Core.GameConfig = {
     dom: {
         createContainer: true
     },
-    // backgroundColor: '#028af8',
+    backgroundColor: '0xffffff',
     scene: [
         BootScene,
-        HudScene,
+        Login,
+        CharacterSelect,
+        TacticalHudScene,
         MarbleGameScene,
+        TacticalScene,
         WorldSelectScene,
         TestScene,
         AuthTestScene
@@ -62,19 +68,3 @@ const StartGame = (parent: string) => {
 }
 
 export default StartGame;
-
-export const respondToVisibility = (element: HTMLElement | null, callback: any) => {
-    // console.log('element',element)
-    var options = {
-        root: null,
-    };
-
-    var observer = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            callback(entry.intersectionRatio > 0)
-        });
-    }, options)
-    if (!!element) {
-        observer.observe(element)
-    }
-}

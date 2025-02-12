@@ -11,6 +11,7 @@ import ChatBubble from "@/client/ChatBubble"
 import { Character } from "@/Character"
 import { BACKEND_URL } from "../BACKEND_URL"
 import WorldObject from "@/WorldObject"
+import { TacticalHudScene } from "./TacticalHudScene"
 
 export class MarbleGameScene extends Scene {
     static key = "MarbleGameScene"
@@ -42,7 +43,7 @@ export class MarbleGameScene extends Scene {
 
     preload() {
         // console.log('MarbleGameScene preload')
-        this.cameras.main.setBackgroundColor(0xf0f0f0)
+       // this.cameras.main.setBackgroundColor(0xf0f0f0)
         this.load.image('background')
         this.load.html("input", "input.html")
         Character.preload(this)
@@ -61,6 +62,9 @@ export class MarbleGameScene extends Scene {
     spritesGroup: GameObjects.Group
 
     async create() {
+
+        // this.scene.launch(HudScene.key)
+
         // console.log('MarbleGameScene create')
         await this.createClient(this.token)
         this.registry.events.on('auth.email', (email: any) => {
@@ -280,7 +284,6 @@ export class MarbleGameScene extends Scene {
         if (this.room && player.sessionId == this.room.sessionId) {
             // console.log('current player')
             this.currentPlayer = player
-
         }
 
         //watch for players to change their sessionId
@@ -445,48 +448,42 @@ export class MarbleGameScene extends Scene {
         //add connection status text
         const connectionStatusText = this.add
             .text(300, 0, "Trying to connect with the server...")
-            .setStyle({ color: "#ff0000" })
+            // .setStyle({ color: "#ff0000" })
             .setPadding(4)
 
         // this.registry.events.destroy()
 
         this.client = new Client(BACKEND_URL)
         // this.client.reconnect()
+        this.client.auth.onChange(async (authData: { user: string; token: string }) => {
+            console.log('auth onchange', authData)
+            if (!!authData.user) {
+                // console.log('logged in',authData)
+                //logged in
+                this.registry.events.emit('auth.email', authData.user)
+                if (this.room && this.client) {
+                    this.client.auth.token = authData.token
+                    // console.log(this.client.auth.token)
+                    // this.room.send('auth', 'login')
+                }
+            }
+            else {
+                // console.log(authData)
+                // console.log(this.client.auth.token)
+                this.registry.events.emit('auth.email', authData.user)
+                if (this.room && this.client) {
+                    this.client.auth.token = ''
+                    // console.log(this.client.auth.token)
+                    // this.room.send('auth', 'logout')
+                }
+            }
+        })
 
-
-        this.client.auth.token = token
+        // this.client.auth.token = token
 
         try {
             this.room = await this.client.joinOrCreate(this.roomName, {})
-
-            this.client.auth.onChange(async (authData: { user: string; token: string }) => {
-                // console.log('auth onchange', authData)
-                if (!!authData.user) {
-                    // console.log('logged in',authData)
-                    //logged in
-                    this.registry.events.emit('auth.email', authData.user)
-                    if (this.room && this.client) {
-                        this.client.auth.token = authData.token
-                        // console.log(this.client.auth.token)
-                        this.room.send('auth', 'login')
-                        // this.room.leave(false)
-                        // this.room = await this.client.joinOrCreate(this.roomName)
-                    }
-                }
-                else {
-                    console.log(authData)
-                    // console.log(this.client.auth.token)
-                    this.registry.events.emit('auth.email', authData.user)
-                    if (this.room && this.client) {
-                        this.client.auth.token = ''
-                        console.log(this.client.auth.token)
-                        this.room.send('auth', 'logout')
-                        // this.room.leave(false)
-                        // this.room = await this.client.joinOrCreate(this.roomName)
-                    }
-                }
-            })
-
+ 
             this.stateChangeHandlers(this.client, this.room)
             connectionStatusText.destroy()
 
@@ -523,7 +520,7 @@ export class MarbleGameScene extends Scene {
             else {
                 console.log('lost client')
             }
-            //TODO try to reconnect, or go back to the world select scene
+            //  try to reconnect, or go back to the world select scene
         })
 
         room.state.onChange(() => {
@@ -541,7 +538,7 @@ export class MarbleGameScene extends Scene {
             // console.log('new character', characterId)
             this.addCharacter(character)
         })
-       
+
         room.state.objects.onAdd((object: WorldObject, id: string) => {
             // console.log('new character', characterId)
             this.addObject(object)

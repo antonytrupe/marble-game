@@ -9,6 +9,9 @@ import { getVelocity } from "./functions"
 
 export class Character extends Schema {
 
+  static spriteName='marble'
+
+
   @type("string") id: string
   @type("string") playerId: string
   @type("string") name: string
@@ -32,10 +35,11 @@ export class Character extends Schema {
   body: Body
 
   sprite: Physics.Matter.Sprite
-
+  constructor()
+  constructor({ })
   constructor({ character }: { character: Character })
   constructor({ x, y }: { x: number, y: number })
-  constructor({ x, y, character }: { x: number, y: number, character: Character }) {
+  constructor({ x = 0, y = 0, character }: { x?: number, y?: number, character?: Character } = {}) {
     super()
     // ({ x: this.position.x, y: this.position.y } = data)
     this.position.x = x
@@ -55,18 +59,26 @@ export class Character extends Schema {
       this.speed = character.speed
       this.movement = character.movement
       this.speedMode = character.speedMode
-      this.messages.push(...Array.from(character.messages))
+      if (!!character.messages) {
+        this.messages.push(...Array.from(character.messages))
+      }
     }
     // console.log(this.velocity)
   }
 
   static preload(scene: Scene) {
     // scene.load.image('ship_0001')
-    scene.load.atlas('marble', 'marble/texture.png', 'marble/texture.json')
+    scene.load.atlas(Character.spriteName, `${Character.spriteName}/texture.png`, `${Character.spriteName}/texture.json`)
+
   }
 
   static create(scene: Scene) {
-    scene.anims.create({ key: 'marble-roll', frameRate: 10, frames: scene.anims.generateFrameNames('marble', { start: 1, end: 12, prefix: '' }), repeat: -1 })
+    scene.anims.create({
+      key: 'marble-roll',
+      frameRate: 10,
+      frames: scene.anims.generateFrameNames(Character.spriteName, { start: 1, end: 12, prefix: '' }),
+      repeat: -1
+    })
   }
 
   static createMatterBody(character: Character, world: Composite) {
@@ -83,6 +95,10 @@ export class Character extends Schema {
 
     character.body = compoundBody
     Composite.add(world, [compoundBody])
+  }
+
+  static removeMatterBody(character: Character, world: Composite) {
+    // Composite.remove(world, character.body)
   }
 
   static move(character: Character) {
